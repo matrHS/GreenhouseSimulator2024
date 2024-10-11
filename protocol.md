@@ -21,11 +21,14 @@ distributed application.
 TODO - what transport-layer protocol do you use? TCP? UDP? What port number(s)? Why did you 
 choose this transport layer protocol?
 
+TCP
+
 ## The architecture
 
 TODO - show the general architecture of your network. Which part is a server? Who are clients? 
 Do you have one or several servers? Perhaps include a picture here. 
 
+Control Panel is the server and sensors are the Clients (Control Panels are the nodes whilst the sensors are the actors )
 
 ## The flow of information and events
 
@@ -33,24 +36,39 @@ TODO - describe what each network node does and when. Some periodic events? Some
 incoming packets? Perhaps split into several subsections, where each subsection describes one 
 node type (For example: one subsection for sensor/actuator nodes, one for control panel nodes).
 
+For sensor data the data should be buffered and sent in "bulks" to the server. If the temperature rises too fast the
+server should be notified immediately. Sensor nodes periodically sends buffered sensor data every 30 seconds to reduce
+congestion on the network. There should also be aggregate data like avg, etc. included in the sent data.
+
 ## Connection and state
 
 TODO - is your communication protocol connection-oriented or connection-less? Is it stateful or 
 stateless? 
+
+Connection-oriented. It is a stateful communication due to the sensors holding its own data if the server disconnect 
+away.
 
 ## Types, constants
 
 TODO - Do you have some specific value types you use in several messages? They you can describe 
 them here.
 
+We plan to use an object we define
+
 ## Message format
 
 TODO - describe the general format of all messages. Then describe specific format for each 
 message type in your protocol.
 
+The start of the message should contain commands and statuses. Due to us using objects we can use a HashMap to easily
+identify the commands, status and data. This will be variable length.
+
 ### Error messages
 
 TODO - describe the possible error messages that nodes can send in your system.
+
+If the command or state is incorrect, the server should be notified about the error. If the data is incorrectly formatted,
+it should be rejected and an error should be thrown.
 
 ## An example scenario
 
