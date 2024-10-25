@@ -1,5 +1,8 @@
 package no.ntnu.greenhouse;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,6 +14,10 @@ import no.ntnu.tools.Logger;
  * Application entrypoint - a simulator for a greenhouse.
  */
 public class GreenhouseSimulator {
+  private final static String SERVER_HOST = "localhost";
+  private final static int TCP_PORT = 1236;
+  private ObjectInputStream objectInputStream;
+  private Socket socket;
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
 
   private final List<PeriodicSwitch> periodicSwitches = new LinkedList<>();
@@ -67,6 +74,15 @@ public class GreenhouseSimulator {
 
   private void initiateRealCommunication() {
     // TODO - here you can set up the TCP or UDP communication
+    try {
+      this.socket = new Socket(this.SERVER_HOST, this.TCP_PORT);
+      objectInputStream = new ObjectInputStream(socket.getInputStream());
+
+      System.out.println("Connection Established");
+    } catch (IOException e) {
+      // TODO: Replace with logger
+      System.out.println(e);
+    }
   }
 
   private void initiateFakePeriodicSwitches() {
