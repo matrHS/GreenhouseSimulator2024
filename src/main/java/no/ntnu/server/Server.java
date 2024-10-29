@@ -10,13 +10,27 @@ public class Server{
 
   private HashMap<Integer, Socket> greenHouseSockets;
 
-  static final int TCP_PORT = 1236;
+  static final int TCP_PORT = 0;
   private HashMap<Integer, Socket> controlPanels;
   private ServerSocket serverSocket;
 
+  public static void main(String[] args){
+    Server server = new Server();
+    server.run();
+  }
 
   public Server(HashMap<Integer, Socket> greenHouses){
     greenHouseSockets = greenHouses;
+    controlPanels = new HashMap<>();
+
+    try {
+      serverSocket = new ServerSocket(TCP_PORT);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public Server(){
     controlPanels = new HashMap<>();
 
     try {
@@ -38,7 +52,12 @@ public class Server{
 
     while(true){
       Socket socket = acceptNextClient();
-      new ControlPanelHandler(socket).start();
+      System.out.println("Connected to: " + socket.getPort());
+      GreenhouseHandler handler = new GreenhouseHandler(socket);
+      handler.start();
+      handler.testMessage();
+
+      System.out.println("Connected to: " + socket.getPort());
     }
   }
 

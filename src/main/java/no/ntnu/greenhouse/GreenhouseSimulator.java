@@ -2,6 +2,7 @@ package no.ntnu.greenhouse;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,8 +16,9 @@ import no.ntnu.tools.Logger;
  */
 public class GreenhouseSimulator {
   private final static String SERVER_HOST = "localhost";
-  private final static int TCP_PORT = 1236;
+  private final static int TCP_PORT = 56422;
   private ObjectInputStream objectInputStream;
+  private ObjectOutputStream objectOutputStream;
   private Socket socket;
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
 
@@ -79,6 +81,8 @@ public class GreenhouseSimulator {
       objectInputStream = new ObjectInputStream(socket.getInputStream());
 
       System.out.println("Connection Established");
+      objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+      objectOutputStream.writeObject("Hello from the client");
     } catch (IOException e) {
       // TODO: Replace with logger
       System.out.println(e);
