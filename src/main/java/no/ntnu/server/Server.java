@@ -55,7 +55,6 @@ public class Server{
       System.out.println("Connected to: " + socket.getPort());
       GreenhouseHandler handler = new GreenhouseHandler(socket);
       handler.start();
-      handler.testMessage();
 
       System.out.println("Connected to: " + socket.getPort());
     }

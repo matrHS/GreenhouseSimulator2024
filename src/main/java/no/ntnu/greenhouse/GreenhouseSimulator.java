@@ -16,7 +16,7 @@ import no.ntnu.tools.Logger;
  */
 public class GreenhouseSimulator {
   private final static String SERVER_HOST = "localhost";
-  private final static int TCP_PORT = 56422;
+  private final static int TCP_PORT = 52704;
   private ObjectInputStream objectInputStream;
   private ObjectOutputStream objectOutputStream;
   private Socket socket;
@@ -78,11 +78,12 @@ public class GreenhouseSimulator {
     // TODO - here you can set up the TCP or UDP communication
     try {
       this.socket = new Socket(this.SERVER_HOST, this.TCP_PORT);
-      objectInputStream = new ObjectInputStream(socket.getInputStream());
+       objectInputStream = new ObjectInputStream(socket.getInputStream());
 
       System.out.println("Connection Established");
       objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
       objectOutputStream.writeObject("Hello from the client");
+      objectOutputStream.writeObject("Hello from the client again");
     } catch (IOException e) {
       // TODO: Replace with logger
       System.out.println(e);

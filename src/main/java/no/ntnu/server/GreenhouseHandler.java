@@ -1,12 +1,15 @@
 package no.ntnu.server;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class GreenhouseHandler extends Thread{
   private final Socket socket;
 
   private ObjectInputStream inputStream;
+  private ObjectOutputStream outputStream;
 
   public GreenhouseHandler(Socket clientSocket) {
     this.socket = clientSocket;
@@ -14,13 +17,24 @@ public class GreenhouseHandler extends Thread{
 
   @Override
   public void run() {
+    try {
+      System.out.println("I am greenouse: " + socket.getPort());
+      outputStream = new ObjectOutputStream(socket.getOutputStream());
+      inputStream = new ObjectInputStream( socket.getInputStream());
 
+      System.out.println(inputStream.readObject().toString());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+
+    testMessage();
   }
 
   public void testMessage() {
-    System.out.println("I am greenouse: " + socket.getPort());
+    System.out.println("trying to read from : " + socket.getPort());
     try {
-      inputStream = new ObjectInputStream( socket.getInputStream());
       System.out.println(inputStream.readObject().toString());
     } catch (Exception e) {
       throw new RuntimeException(e);
