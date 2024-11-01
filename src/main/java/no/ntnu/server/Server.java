@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import no.ntnu.tools.Logger;
 
-public class Server{
+public class Server extends Thread{
 
   private HashMap<Integer, Socket> greenHouseSockets;
 
@@ -40,10 +40,15 @@ public class Server{
     }
   }
 
+  public int init(){
+    return serverSocket.getLocalPort();
+  }
+
   /**
    * Run the server, and handle the client.
    */
   public void run(){
+    System.out.println("server starting");
     ServerSocket severSocket = openListeningPort();
     if (severSocket == null){
       return;
@@ -55,6 +60,7 @@ public class Server{
       System.out.println("Connected to: " + socket.getPort());
       GreenhouseHandler handler = new GreenhouseHandler(socket);
       handler.start();
+
 
       System.out.println("Connected to: " + socket.getPort());
     }

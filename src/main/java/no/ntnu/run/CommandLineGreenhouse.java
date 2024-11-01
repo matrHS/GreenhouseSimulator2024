@@ -1,6 +1,7 @@
 package no.ntnu.run;
 
 import no.ntnu.greenhouse.GreenhouseSimulator;
+import no.ntnu.server.Server;
 import no.ntnu.tools.Logger;
 
 /**
@@ -21,8 +22,15 @@ public class CommandLineGreenhouse {
       fake = true;
       Logger.info("Using FAKE events");
     }
-    GreenhouseSimulator simulator = new GreenhouseSimulator(fake);
+
+    Server server = new Server();
+    int tcp = server.init();
+    server.start();
+
+    GreenhouseSimulator simulator = new GreenhouseSimulator(tcp);
     simulator.initialize();
     simulator.start();
+
+    System.out.println("here");
   }
 }
