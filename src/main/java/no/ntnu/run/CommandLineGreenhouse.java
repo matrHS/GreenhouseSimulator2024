@@ -30,6 +30,13 @@ public class CommandLineGreenhouse {
     GreenhouseSimulator simulator = new GreenhouseSimulator(tcp);
     simulator.initialize();
     simulator.start();
+    GreenhouseSimulator simulator2 = new GreenhouseSimulator(tcp);
+    simulator2.initialize();
+    simulator2.start();
+    GreenhouseSimulator simulator3 = new GreenhouseSimulator(tcp);
+    simulator3.initialize();
+    simulator3.start();
+
 
     System.out.println("here");
   }

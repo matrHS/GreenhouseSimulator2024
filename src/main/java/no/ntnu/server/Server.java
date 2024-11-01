@@ -7,10 +7,8 @@ import java.util.HashMap;
 import no.ntnu.tools.Logger;
 
 public class Server extends Thread{
-
-  private HashMap<Integer, Socket> greenHouseSockets;
-
   static final int TCP_PORT = 0;
+  private HashMap<Integer, GreenhouseHandler> greenHouseSockets;
   private HashMap<Integer, Socket> controlPanels;
   private ServerSocket serverSocket;
 
@@ -20,7 +18,6 @@ public class Server extends Thread{
   }
 
   public Server(HashMap<Integer, Socket> greenHouses){
-    greenHouseSockets = greenHouses;
     controlPanels = new HashMap<>();
 
     try {
@@ -32,6 +29,7 @@ public class Server extends Thread{
 
   public Server(){
     controlPanels = new HashMap<>();
+    greenHouseSockets = new HashMap<>();
 
     try {
       serverSocket = new ServerSocket(TCP_PORT);
@@ -59,8 +57,9 @@ public class Server extends Thread{
       Socket socket = acceptNextClient();
       System.out.println("Connected to: " + socket.getPort());
       GreenhouseHandler handler = new GreenhouseHandler(socket);
+      greenHouseSockets.put(socket.getPort(),handler);
       handler.start();
-
+      System.out.println("holding sockets for: " + greenHouseSockets.keySet());
 
       System.out.println("Connected to: " + socket.getPort());
     }

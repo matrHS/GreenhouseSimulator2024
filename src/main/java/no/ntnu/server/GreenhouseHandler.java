@@ -13,10 +13,6 @@ public class GreenhouseHandler extends Thread{
 
   public GreenhouseHandler(Socket clientSocket) {
     this.socket = clientSocket;
-  }
-
-  @Override
-  public void run() {
     try {
       System.out.println("I am greenouse: " + socket.getPort());
       outputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -29,7 +25,12 @@ public class GreenhouseHandler extends Thread{
       throw new RuntimeException(e);
     }
 
-    testMessage();
+  }
+
+  @Override
+  public void run() {
+
+
   }
 
   public void testMessage() {
