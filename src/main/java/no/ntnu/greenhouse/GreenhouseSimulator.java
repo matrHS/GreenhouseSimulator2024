@@ -49,7 +49,9 @@ public class GreenhouseSimulator {
     Logger.info("Greenhouse initialized");
   }
 
+  // TODO: Refactor into separate NODE class. Separate all node functionality to its own class
   private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
+    initiateCommunication();
     SensorActuatorNode node = DeviceFactory.createNode(
         temperature, humidity, windows, fans, heaters);
     nodes.put(node.getId(), node);
@@ -59,7 +61,7 @@ public class GreenhouseSimulator {
    * Start a simulation of a greenhouse - all the sensor and actuator nodes inside it.
    */
   public void start() {
-    initiateCommunication();
+
     for (SensorActuatorNode node : nodes.values()) {
       node.start();
     }
@@ -78,6 +80,10 @@ public class GreenhouseSimulator {
     }
   }
 
+  /**
+   * Initializes communication between a node and the server.
+   * Each node is defined as a greenhouse consisting of multiple sensors.
+   */
   private void initiateRealCommunication() {
     // TODO - here you can set up the TCP or UDP communication
     try {
@@ -116,6 +122,11 @@ public class GreenhouseSimulator {
       }
     } else {
       // TODO - here you stop the TCP/UDP communication
+      try {
+        this.socket.close();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
