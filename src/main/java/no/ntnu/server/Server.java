@@ -7,7 +7,7 @@ import java.util.HashMap;
 import no.ntnu.tools.Logger;
 
 public class Server extends Thread{
-  static final int TCP_PORT = 0;
+  static final int TCP_PORT = 1238;
   private HashMap<Integer, GreenhouseHandler> greenHouseSockets;
   private HashMap<Integer, Socket> controlPanels;
   private ServerSocket serverSocket;
@@ -19,23 +19,15 @@ public class Server extends Thread{
 
   public Server(HashMap<Integer, Socket> greenHouses){
     controlPanels = new HashMap<>();
-
-    try {
-      serverSocket = new ServerSocket(TCP_PORT);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    serverSocket = openListeningPort();
   }
 
   public Server(){
     controlPanels = new HashMap<>();
     greenHouseSockets = new HashMap<>();
+    serverSocket = openListeningPort();
 
-    try {
-      serverSocket = new ServerSocket(TCP_PORT);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+
   }
 
   public int init(){
@@ -47,10 +39,6 @@ public class Server extends Thread{
    */
   public void run(){
     System.out.println("server starting");
-    ServerSocket severSocket = openListeningPort();
-    if (severSocket == null){
-      return;
-    }
     System.out.println("Running on port: " + serverSocket.getLocalPort());
 
     while(true){

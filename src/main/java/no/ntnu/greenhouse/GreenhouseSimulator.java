@@ -16,7 +16,7 @@ import no.ntnu.tools.Logger;
  */
 public class GreenhouseSimulator {
   private final static String SERVER_HOST = "localhost";
-  private  int TCP_PORT = 52704;
+  private  int TCP_PORT = 1238;
   private ObjectInputStream objectInputStream;
   private ObjectOutputStream objectOutputStream;
   private Socket socket;
