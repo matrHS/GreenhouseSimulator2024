@@ -50,6 +50,7 @@ public class Server extends Thread{
       System.out.println("holding sockets for: " + greenHouseSockets.keySet());
 
       System.out.println("Connected to: " + socket.getPort());
+
     }
   }
 

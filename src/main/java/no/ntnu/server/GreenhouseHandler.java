@@ -17,11 +17,10 @@ public class GreenhouseHandler extends Thread{
       System.out.println("I am greenouse: " + socket.getPort());
       outputStream = new ObjectOutputStream(socket.getOutputStream());
       inputStream = new ObjectInputStream( socket.getInputStream());
+      testSendCommand();
 
-      System.out.println(inputStream.readObject().toString());
+
     } catch (IOException e) {
-      throw new RuntimeException(e);
-    } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
 
@@ -31,6 +30,17 @@ public class GreenhouseHandler extends Thread{
   public void run() {
 
 
+  }
+
+  public void testSendCommand() {
+    System.out.println("trying to write to : " + socket.getPort());
+    String[] command = {"set", "2", "true"};
+    try {
+      outputStream.writeObject(command);
+      System.out.println("sent command");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public void testMessage() {
