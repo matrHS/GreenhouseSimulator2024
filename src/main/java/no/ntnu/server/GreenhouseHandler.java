@@ -11,12 +11,12 @@ public class GreenhouseHandler extends Thread{
   private ObjectInputStream inputStream;
   private ObjectOutputStream outputStream;
 
-  public GreenhouseHandler(Socket clientSocket) {
+  public GreenhouseHandler(Socket clientSocket, ObjectOutputStream output, ObjectInputStream input) {
     this.socket = clientSocket;
     try {
       System.out.println("I am greenouse: " + socket.getPort());
-      outputStream = new ObjectOutputStream(socket.getOutputStream());
-      inputStream = new ObjectInputStream( socket.getInputStream());
+      outputStream = output;
+      inputStream = input;
 
       System.out.println(inputStream.readObject().toString());
     } catch (IOException e) {

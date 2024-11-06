@@ -1,15 +1,18 @@
 package no.ntnu.server;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import javafx.beans.property.adapter.ReadOnlyJavaBeanBooleanProperty;
 import no.ntnu.tools.Logger;
 
 public class Server extends Thread{
   static final int TCP_PORT = 1238;
   private HashMap<Integer, GreenhouseHandler> greenHouseSockets;
-  private HashMap<Integer, Socket> controlPanels;
+  private HashMap<Integer, ControlPanelHandler> controlPanels;
   private ServerSocket serverSocket;
 
   public static void main(String[] args){
@@ -37,18 +40,16 @@ public class Server extends Thread{
   /**
    * Run the server, and handle the client.
    */
+  @Override
   public void run(){
     System.out.println("server starting");
     System.out.println("Running on port: " + serverSocket.getLocalPort());
-
     while(true){
+
       Socket socket = acceptNextClient();
       System.out.println("Connected to: " + socket.getPort());
-      GreenhouseHandler handler = new GreenhouseHandler(socket);
-      greenHouseSockets.put(socket.getPort(),handler);
-      handler.start();
-      System.out.println("holding sockets for: " + greenHouseSockets.keySet());
-
+      System.out.println("holding sockets for: " + greenHouseSockets.keySet() + " and "
+          + controlPanels.keySet());
       System.out.println("Connected to: " + socket.getPort());
     }
   }
@@ -78,9 +79,27 @@ public class Server extends Thread{
       Socket socket = null;
       try{
         socket = serverSocket.accept();
-        controlPanels.put(socket.getPort(), socket);
+        ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+        ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+        Object obj = inputStream.readObject();
+        String type = (obj instanceof String) ? obj.toString() : "fake";
+
+        if(type.equals("cp")){
+          ControlPanelHandler handler = new ControlPanelHandler(socket,outputStream, inputStream);
+          controlPanels.put(socket.getPort(), handler);
+          handler.start();
+          System.out.println("new control panel connected");
+        }else{
+
+          GreenhouseHandler handler = new GreenhouseHandler(socket, outputStream, inputStream);
+          greenHouseSockets.put(socket.getPort(),handler);
+          handler.start();
+          System.out.println(handler.isAlive());
+        }
       } catch(IOException e){
         System.out.println("Could not accept the next client: "+e.getMessage());
+      } catch (ClassNotFoundException e) {
+        throw new RuntimeException(e);
       }
       return socket;
     }
