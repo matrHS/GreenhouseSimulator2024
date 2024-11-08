@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
+import no.ntnu.server.Server;
 import no.ntnu.tools.Logger;
 
 /**
@@ -24,6 +25,7 @@ public class GreenhouseSimulator {
 
   private final List<PeriodicSwitch> periodicSwitches = new LinkedList<>();
   private final boolean fake;
+  private GreenhouseNode greenhouseNode;
 
   /**
    * Create a greenhouse simulator.
@@ -43,9 +45,9 @@ public class GreenhouseSimulator {
    * Initialise the greenhouse but don't start the simulation just yet.
    */
   public void initialize() {
-    createNode(1, 2, 1, 0, 0);
-    createNode(1, 0, 0, 2, 1);
-    createNode(2, 0, 0, 0, 0);
+    this.greenhouseNode = new GreenhouseNode(TCP_PORT);
+    this.greenhouseNode.initialize(new String[]{"1", "2", "1", "0", "0"});
+
     Logger.info("Greenhouse initialized");
   }
 
@@ -62,12 +64,7 @@ public class GreenhouseSimulator {
    */
   public void start() {
 
-    for (SensorActuatorNode node : nodes.values()) {
-      node.start();
-    }
-    for (PeriodicSwitch periodicSwitch : periodicSwitches) {
-      periodicSwitch.start();
-    }
+    this.greenhouseNode.start();
 
     Logger.info("Simulator started");
   }

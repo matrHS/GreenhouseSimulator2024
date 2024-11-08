@@ -6,10 +6,17 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
-import javafx.beans.property.adapter.ReadOnlyJavaBeanBooleanProperty;
+
+import java.util.List;
+import no.ntnu.controlpanel.SensorActuatorNodeInfo;
+import no.ntnu.greenhouse.Sensor;
+import no.ntnu.greenhouse.SensorReading;
+import no.ntnu.listeners.common.CommunicationChannelListener;
+import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
+import no.ntnu.listeners.greenhouse.SensorListener;
 import no.ntnu.tools.Logger;
 
-public class Server extends Thread{
+public class Server extends Thread {
   static final int TCP_PORT = 1238;
   private HashMap<Integer, GreenhouseHandler> greenHouseSockets;
   private HashMap<Integer, ControlPanelHandler> controlPanels;
@@ -51,6 +58,9 @@ public class Server extends Thread{
       System.out.println("holding sockets for: " + greenHouseSockets.keySet() + " and "
           + controlPanels.keySet());
       System.out.println("Connected to: " + socket.getPort());
+
+
+
     }
   }
 
@@ -104,6 +114,7 @@ public class Server extends Thread{
       }
       return socket;
     }
+
 
 
 }
