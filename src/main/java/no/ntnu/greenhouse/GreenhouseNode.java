@@ -1,13 +1,19 @@
 package no.ntnu.greenhouse;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import no.ntnu.listeners.greenhouse.NodeStateListener;
+import no.ntnu.listeners.greenhouse.SensorListener;
+import no.ntnu.tools.Logger;
 
-public class GreenhouseNode {
+public class GreenhouseNode implements SensorListener, NodeStateListener {
   private final static String SERVER_HOST = "localhost";
   private int TCP_PORT = 1238;
   private ObjectInputStream objectInputStream;
@@ -19,16 +25,18 @@ public class GreenhouseNode {
 
 
 
-  public static void main(String[] args) {
-    GreenhouseNode manager = new GreenhouseNode(1238);
-    manager.initialize(args);
-    manager.start();
-  }
 
-  private void start() {
+  /**
+   * Start the greenhouse.
+   */
+  public void start() {
     node.start();
   }
 
+  /**
+   * Create a greenhouse node that should connect to specified TCP port of server.
+   * @param TCP_PORT
+   */
   public GreenhouseNode(int TCP_PORT) {
     this.TCP_PORT = TCP_PORT;
   }
@@ -57,12 +65,8 @@ public class GreenhouseNode {
 
     initiateCommunication();
     System.out.println("Greenhouse initialized and connected");
-    try {
-      Thread.sleep(4000);
-      processCommand();
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    processCommand();
+
   }
 
   /**
@@ -98,6 +102,8 @@ public class GreenhouseNode {
   private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
     this.node = DeviceFactory.createNode(
         temperature, humidity, windows, fans, heaters);
+    node.addSensorListener(this);
+
   }
 
 
@@ -109,25 +115,35 @@ public class GreenhouseNode {
     // TODO - here you can set up the TCP or UDP communication
     try {
       this.socket = new Socket(SERVER_HOST, this.TCP_PORT);
-      objectInputStream = new ObjectInputStream(socket.getInputStream());
-      objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+      socket.setSoTimeout(1000);
+      this.objectInputStream = new ObjectInputStream(socket.getInputStream());
+      this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+
     } catch (IOException e) {
       // TODO: Replace with logger
       System.out.println(e);
     }
   }
 
+  /**
+   * Processes the command received from the server.
+   */
   private void processCommand() {
-    String[] command = receiveCommand();
-    switch (command[0]) {
-      case "set":
-        node.setActuator(Integer.parseInt(command[1]), Boolean.parseBoolean(command[2]));
-        break;
-      case "actuate":
-        node.toggleActuator(Integer.parseInt(command[1]));
-        break;
-      default:
-        System.out.println("Unknown command: " + command[0]);
+
+    try {
+      String[] command = receiveCommand();
+      switch (command[0]) {
+        case "set":
+          node.setActuator(Integer.parseInt(command[1]), Boolean.parseBoolean(command[2]));
+          break;
+        case "actuate":
+          node.toggleActuator(Integer.parseInt(command[1]));
+          break;
+        default:
+          System.out.println("Unknown command: " + command[0]);
+      }
+    } catch (RuntimeException e) {
+      Logger.error(e.toString());
     }
   }
 
@@ -135,7 +151,7 @@ public class GreenhouseNode {
    * Sends a command to the server.
    * Command
    * SensorID
-   * Value
+   * Value(s)
    *
    * @param command the command to send
    */
@@ -148,12 +164,17 @@ public class GreenhouseNode {
   }
 
   /**
-   * Receives a command from the server. TLV format.
+   * Receives a command from the server.
    */
   private String[] receiveCommand() {
     try {
+
       return (String[]) objectInputStream.readObject();
-    } catch (Exception e) {
+    } catch (IOException e) {
+      Logger.error("Timeout when reading command\n" + e.toString());
+      throw new RuntimeException(e);
+    } catch (ClassNotFoundException e) {
+      Logger.error(e.toString());
       throw new RuntimeException(e);
     }
   }
@@ -169,7 +190,28 @@ public class GreenhouseNode {
     }
   }
 
+  @Override
+  public void sensorsUpdated(List<Sensor> sensors) {
+
+    String[] command = new String[sensors.size() + 2];
+    command[0] = "read";
+    command[1] = String.valueOf(socket.getLocalPort());
+    for (int i = 0; i < sensors.size(); i++) {
+      command[i + 2] = sensors.get(i).getReading().toString();
+    }
+
+    sendCommand(command);
+
+  }
 
 
+  @Override
+  public void onNodeReady(SensorActuatorNode node) {
+    node.addSensorListener(this);
+  }
 
+  @Override
+  public void onNodeStopped(SensorActuatorNode node) {
+
+  }
 }
