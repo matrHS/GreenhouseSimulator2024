@@ -13,6 +13,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import no.ntnu.controlpanel.CommunicationChannel;
+import no.ntnu.controlpanel.ControlPanelCommunication;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
@@ -31,7 +32,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private static ControlPanelLogic logic;
   private static final int WIDTH = 500;
   private static final int HEIGHT = 400;
-  private static CommunicationChannel channel;
+  private static ControlPanelCommunication channel;
 
   private TabPane nodeTabPane;
   private Scene mainScene;
@@ -53,7 +54,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       throw new IllegalArgumentException("Control panel logic can't be null");
     }
     ControlPanelApplication.logic = logic;
-    ControlPanelApplication.channel = channel;
+    ControlPanelApplication.channel = (ControlPanelCommunication) channel;
     Logger.info("Running control panel GUI...");
     launch();
   }
@@ -73,9 +74,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     stage.show();
     logic.addListener(this);
     logic.setCommunicationChannelListener(this);
-    if (!channel.open()) {
-      logic.onCommunicationChannelClosed();
-    }
+    channel.start();
   }
 
   private static Label createEmptyContent() {

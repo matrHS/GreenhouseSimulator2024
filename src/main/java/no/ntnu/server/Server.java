@@ -79,6 +79,7 @@ public class Server extends Thread{
       Socket socket = null;
       try{
         socket = serverSocket.accept();
+
         ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
         ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
         Object obj = inputStream.readObject();

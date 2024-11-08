@@ -1,6 +1,10 @@
 package no.ntnu.run;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import no.ntnu.greenhouse.GreenhouseSimulator;
+import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.server.Server;
 import no.ntnu.tools.Logger;
 
@@ -23,21 +27,21 @@ public class CommandLineGreenhouse {
       Logger.info("Using FAKE events");
     }
 
-    Server server = new Server();
-    int tcp = server.init();
-    server.start();
-
-    GreenhouseSimulator simulator = new GreenhouseSimulator(tcp);
-    simulator.initialize();
-    simulator.start();
-    GreenhouseSimulator simulator2 = new GreenhouseSimulator(tcp);
-    simulator2.initialize();
-    simulator2.start();
-    GreenhouseSimulator simulator3 = new GreenhouseSimulator(tcp);
-    simulator3.initialize();
-    simulator3.start();
-
-
-    System.out.println("here");
+//    Server server = new Server();
+//    int tcp = server.init();
+//    server.start();
+//
+//    GreenhouseSimulator simulator = new GreenhouseSimulator(tcp);
+//    simulator.initialize();
+//    simulator.start();
+//    GreenhouseSimulator simulator2 = new GreenhouseSimulator(tcp);
+//    simulator2.initialize();
+//    simulator2.start();
+//    GreenhouseSimulator simulator3 = new GreenhouseSimulator(tcp);
+//    simulator3.initialize();
+//    simulator3.start();
+//
+    SensorReading sensorReading = new SensorReading("act", 2, "%");
+    System.out.println(sensorReading);
   }
 }
