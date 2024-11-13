@@ -38,13 +38,14 @@ public class ControlPanelStarter {
     starter.start();
   }
 
-  private void start() {
+  public ControlPanelApplication start() {
     ControlPanelLogic logic = new ControlPanelLogic();
     CommunicationChannel channel = initiateCommunication(logic, fake);
-    ControlPanelApplication.startApp(logic, channel);
+    ControlPanelApplication controlPanel = new ControlPanelApplication(logic, channel);
     // This code is reached only after the GUI-window is closed
-    Logger.info("Exiting the control panel application");
-    stopCommunication();
+    //Logger.info("Exiting the control panel application");
+    //stopCommunication();
+    return controlPanel;
   }
 
   private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) {

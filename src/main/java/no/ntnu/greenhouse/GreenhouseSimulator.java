@@ -137,4 +137,8 @@ public class GreenhouseSimulator {
       node.addStateListener(listener);
     }
   }
+
+  public Map<Integer, SensorActuatorNode> getNodes() {
+    return nodes;
+  }
 }
