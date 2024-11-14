@@ -7,15 +7,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 
-import java.util.List;
-import no.ntnu.controlpanel.SensorActuatorNodeInfo;
-import no.ntnu.greenhouse.Sensor;
-import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.listeners.common.CommunicationChannelListener;
-import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
-import no.ntnu.listeners.greenhouse.SensorListener;
-import no.ntnu.tools.Logger;
-
 public class Server extends Thread {
   static final int TCP_PORT = 1238;
   private HashMap<Integer, GreenhouseHandler> greenHouseSockets;
@@ -40,6 +31,15 @@ public class Server extends Thread {
 
   }
 
+  public void putCommandNode(String[] commands, int Id) {
+    if(greenHouseSockets.containsKey(Id)) {
+      greenHouseSockets.get(Id).setCommand(commands);
+    }
+  }
+  public void putCommandControlPanel(String[] commands) {
+      controlPanels.forEach((k,v) -> v.setCommand(commands));
+  }
+
   public int init(){
     return serverSocket.getLocalPort();
   }
@@ -57,7 +57,6 @@ public class Server extends Thread {
       System.out.println("Connected to: " + socket.getPort());
       System.out.println("holding sockets for: " + greenHouseSockets.keySet() + " and "
           + controlPanels.keySet());
-      System.out.println("Connected to: " + socket.getPort());
 
 
 
@@ -96,13 +95,13 @@ public class Server extends Thread {
         String type = (obj instanceof String) ? obj.toString() : "fake";
 
         if(type.equals("cp")){
-          ControlPanelHandler handler = new ControlPanelHandler(socket,outputStream, inputStream);
+          ControlPanelHandler handler = new ControlPanelHandler(socket,outputStream, inputStream, this);
           controlPanels.put(socket.getPort(), handler);
           handler.start();
           System.out.println("new control panel connected");
         }else{
 
-          GreenhouseHandler handler = new GreenhouseHandler(socket, outputStream, inputStream);
+          GreenhouseHandler handler = new GreenhouseHandler(socket, outputStream, inputStream, this);
           greenHouseSockets.put(socket.getPort(),handler);
           handler.start();
           System.out.println(handler.isAlive());

@@ -5,6 +5,8 @@ import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -118,13 +120,33 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
       socket.setSoTimeout(1000);
       this.objectInputStream = new ObjectInputStream(socket.getInputStream());
       this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-
+      String[] payload = nodeInfoForAddingNodesOnCPanel();
+      payload[0] = "add";
+      Logger.info("sending node info to server");
+      this.objectOutputStream.writeObject(payload);
     } catch (IOException e) {
       // TODO: Replace with logger
       System.out.println(e);
     }
   }
 
+  /**
+   * Returns the node information in the format: "empty-command", "nodeID", "actuatorType",
+   * "actuatorID", "actuatorType", "actuatorID", ...
+   * @return
+   */
+  private String[] nodeInfoForAddingNodesOnCPanel(){
+    String[] nodeInfo = new String[2 + node.getActuators().size()*2];
+    nodeInfo[1] = String.valueOf(node.getId());
+    int index = 2;
+    for (Actuator actuator : this.node.getActuators()) {
+      nodeInfo[index] = actuator.getType();
+      nodeInfo[index + 1] = String.valueOf(actuator.getId());
+      index = index +2;
+    }
+
+    return nodeInfo;
+  }
   /**
    * Processes the command received from the server.
    */
@@ -190,16 +212,24 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
     }
   }
 
+  private void listenForCommands(){
+    try {
+      socket.setSoTimeout(4000);
+      processCommand();
+    } catch (IOException e) {
+      Logger.error("failed to read from server");
+    }
+  }
+
   @Override
   public void sensorsUpdated(List<Sensor> sensors) {
-
+    listenForCommands();
     String[] command = new String[sensors.size() + 2];
-    command[0] = "read";
+    command[0] = "data";
     command[1] = String.valueOf(socket.getLocalPort());
     for (int i = 0; i < sensors.size(); i++) {
       command[i + 2] = sensors.get(i).getReading().toString();
     }
-
     sendCommand(command);
 
   }
