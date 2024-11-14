@@ -66,7 +66,7 @@ public class MainGui extends Application implements NodeStateListener {
     this.stage = primaryStage;
     stage.setTitle("Greenhouse Simulator");
 
-    this.controller = new MainGuiController(this);
+    //this.controller = new MainGuiController(this);
 
     simulator.initialize();
     simulator.subscribeToLifecycleUpdates(this);
@@ -119,7 +119,7 @@ public class MainGui extends Application implements NodeStateListener {
     VBox headerPane = Default.setHeader(this.controller);
 
     this.tabPane = new TabPane(createMainScene());
-    this.tabPane.getTabs().add(controller.getControlPanelTab(this.fake));
+    //this.tabPane.getTabs().add(controller.getControlPanelTab(this.fake));
     for(Map.Entry<Integer, SensorActuatorNode> entry : nodes.entrySet()){
       SensorActuatorNode node = entry.getValue();
       tabPane.getTabs().add(controller.getGreenhouseWindow(node));

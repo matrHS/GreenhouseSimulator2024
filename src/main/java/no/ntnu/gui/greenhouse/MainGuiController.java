@@ -10,27 +10,18 @@ import no.ntnu.run.ControlPanelStarter;
 
 public class MainGuiController {
 
-  private MainGui mainWindow;
+  private ControlPanelApplication mainWindow;
   private static Map<Integer, SensorActuatorNode> nodes;
 
-  public MainGuiController(MainGui mainWindow) {
+  public MainGuiController(ControlPanelApplication mainWindow) {
     this.mainWindow = mainWindow;
   }
 
-  public void setMainPageTab() {
-     this.mainWindow.setMainWindow();
-  }
+  public void setMainPageTab() { this.mainWindow.setMainWindow();}
 
   public Tab getGreenhouseWindow(SensorActuatorNode node){
     GreenhouseWindow greenhouseWindow = new GreenhouseWindow(this, node);
     return greenhouseWindow.getGreenhouseTab();
   }
-
-  public Tab getControlPanelTab(Boolean fake){
-    ControlPanelStarter starter = new ControlPanelStarter(!fake);
-    ControlPanelApplication controlPanel = starter.start();
-    return controlPanel.getControlPanelTab();
-  }
-
 
 }

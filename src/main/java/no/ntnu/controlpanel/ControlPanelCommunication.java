@@ -19,9 +19,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   private final int TCP_PORT = 1238;
   private Socket socket;
 
-  enum CLAZZ{
+ /* enum CLAZZ{
     NODE_INFO,
-  }
+  }*/
 
     /**
      * Constructor for the ControlPanelCommunication

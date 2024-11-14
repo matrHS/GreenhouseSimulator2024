@@ -3,76 +3,220 @@ package no.ntnu.gui.controlpanel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.HPos;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
-import javafx.scene.control.TitledPane;
+import javafx.scene.control.TabPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.ControlPanelCommunication;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
-import no.ntnu.greenhouse.Sensor;
 import no.ntnu.greenhouse.SensorActuatorNode;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.gui.common.ActuatorPane;
 import no.ntnu.gui.common.SensorPane;
-import no.ntnu.gui.greenhouse.NodeGuiBox;
+import no.ntnu.gui.greenhouse.Default;
+import no.ntnu.gui.greenhouse.MainGuiController;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
-import no.ntnu.listeners.greenhouse.NodeStateListener;
+import no.ntnu.server.ControlPanelHandler;
 import no.ntnu.tools.Logger;
 
 /**
  * Run a control panel with a graphical user interface (GUI), with JavaFX.
  */
-public class ControlPanelApplication implements GreenhouseEventListener,
+public class ControlPanelApplication extends Application implements GreenhouseEventListener,
     CommunicationChannelListener {
 
   private static ControlPanelLogic logic;
   private static ControlPanelCommunication channel;
 
-
-  private Tab controlPanelTab;
   private HBox mainPane;
+  private Scene scene;
+  private Stage stage;
+  private TabPane tabPane; // The tab pane for the app
+  private MainGuiController controller;
   private final Map<Integer, SensorPane> sensorPanes = new HashMap<>();
   private final Map<Integer, ActuatorPane> actuatorPanes = new HashMap<>();
   private final Map<Integer, SensorActuatorNodeInfo> nodeInfos = new HashMap<>();
 
-  public ControlPanelApplication(ControlPanelLogic logic, CommunicationChannel channel){
+
+  public static void startApp(ControlPanelLogic logic, CommunicationChannel channel) {
     if (logic == null) {
       throw new IllegalArgumentException("Control panel logic can't be null");
     }
     ControlPanelApplication.logic = logic;
     ControlPanelApplication.channel = (ControlPanelCommunication) channel;
     Logger.info("Running control panel GUI...");
+    launch();
+  }
+
+  @Override
+  public void start(Stage stage) {
     if (channel == null) {
       throw new IllegalStateException(
           "No communication channel. See the README on how to use fake event spawner!");
     }
-    this.controlPanelTab = setMainStage();
-  }
+    controller= new MainGuiController(this);
+    this.stage = stage;
+    this.stage.setTitle("Control Panel");
 
-  private Tab setMainStage(){
-    this.mainPane = new HBox();
+    BorderPane root = setMainPage();
+    root.getStyleClass().add("root");
+    mainPane = new HBox(root);
+    scene = Default.defaultScene(mainPane);
+    this.setScene(scene);
+
     logic.addListener(this);
     logic.setCommunicationChannelListener(this);
     channel.start();
-    if (!channel.open()) {
-      logic.onCommunicationChannelClosed();
-    }
-    this.controlPanelTab = new Tab("Control panel", this.mainPane);
-    this.controlPanelTab.getStyleClass().add("root");
-    return this.controlPanelTab;
   }
+
+  /**
+   * Set the scene for the application.
+   *
+   * @param scene The scene to set
+   */
+  public void setScene(Scene scene){
+    scene.getStylesheets().add(getClass().getResource("/css/stylesheet.css").toExternalForm());
+    this.stage.setMaximized(true);
+    stage.getIcons().add(new Image(
+        Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
+               .toExternalForm()));
+    stage.setScene(scene);
+    stage.show();
+    Logger.info("GUI subscribes to lifecycle events");
+  }
+
+  private static Label createEmptyContent() {
+    Label l = new Label("Waiting for node data...");
+    l.setAlignment(Pos.CENTER);
+    return l;
+  }
+
+  /**
+   * Creates the tab pane for the application.
+   *
+   * @return The tab pane for the application.
+   */
+  private BorderPane setMainPage(){
+    try{
+      VBox headerPane = Default.setHeader(this.controller);
+
+      this.tabPane = new TabPane(createMainScene());
+      addNodeTabs();
+      tabPane.getStyleClass().add("tab-pane");
+      tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+
+      BorderPane root = new BorderPane();
+      VBox top = new VBox(headerPane,tabPane);
+      root.setTop(top);
+      return root;
+    } catch (Exception e){
+      Logger.error("Error: " + e.getMessage());
+    }
+    return null;
+  }
+
+  /**
+   * Create the main scene for the application.
+   *
+   * @return The main scene for the application
+   */
+  private Tab createMainScene(){
+    BorderPane mainScene = new BorderPane();
+
+    mainScene.getStyleClass().add("main-center-pane");
+
+    mainScene.setCenter(createCenterPane());
+    mainScene.setRight(new HBox());
+    return new Tab("Home Page", mainScene);
+  }
+
+  /**
+   * Create the center pane for the application.
+   *
+   * @return The center pane for the application
+   */
+  private GridPane createCenterPane(){
+    GridPane centerPane = new GridPane();
+    Screen screen = Screen.getPrimary();
+    Rectangle2D bounds = screen.getVisualBounds();
+    centerPane.getColumnConstraints().add(new ColumnConstraints(bounds.getWidth() / 2));
+    centerPane.getColumnConstraints().add(new ColumnConstraints(bounds.getWidth()/2));
+
+    try {
+      Image greenhouseDrawing = new Image(
+          Objects.requireNonNull(getClass().getResource(
+              "/images/Greenhouse2.jpg")).toExternalForm());
+      ImageView mainImage = new ImageView(greenhouseDrawing);
+
+      mainImage.getStyleClass().add("main-image");
+      GridPane.setHalignment(mainImage, HPos.CENTER);
+      centerPane.add(mainImage, 0,0);
+
+    } catch(Exception e){
+      System.out.println("error:" + e.getMessage());
+    }
+
+    HBox textBox = new HBox();
+    Text description = getDescription();
+    textBox.getChildren().add(description);
+    textBox.getStyleClass().add("text-box-main");
+
+    GridPane.setHalignment(textBox, HPos.CENTER);
+    centerPane.add(textBox, 1,0);
+
+    return centerPane;
+
+  }
+
+  /**
+   * Get the description box for the main page of the application.
+   *
+   * @return The description box for the main page of the application
+   */
+  private static Text getDescription() {
+    Text description = new Text();
+    description.setText("Your task in this project is to implement a meaningful " +
+                        "application and its components for a" +
+                        "complete smart farming solution. The solution includes " +
+                        "communication with sockets. You need to" +
+                        "design your application-layer communication protocol and implement" +
+                        " necessary communication between the nodes so that the " +
+                        "control-panel nodes can visualize sensor data and control " +
+                        "the actuators on the sensor nodes.");
+    description.setFont(new Font(16));
+    description.setWrappingWidth(480);
+    description.setTextAlignment(TextAlignment.CENTER);
+    description.setX(100);
+    return description;
+  }
+
 
   @Override
   public void onNodeAdded(SensorActuatorNodeInfo nodeInfo) {
     Platform.runLater(() -> addNode(nodeInfo));
+    reloadCenterPane();
   }
 
   @Override
@@ -82,10 +226,10 @@ public class ControlPanelApplication implements GreenhouseEventListener,
       Platform.runLater(() -> {
         forgetNodeInfo(nodeId);
         if (nodeInfos.isEmpty()) {
+          mainPane.getChildren().clear();
           mainPane.getChildren().add(new HBox(new Label("No greenhouses found")));
         }
-        mainPane.getChildren().clear();
-        mainPane.getChildren().add(centerPane());
+        reloadCenterPane();
       });
       Logger.info("Greenhouse " + nodeId + " removed");
     } else {
@@ -99,6 +243,7 @@ public class ControlPanelApplication implements GreenhouseEventListener,
     SensorPane sensorPane = sensorPanes.get(nodeId);
     if (sensorPane != null) {
       sensorPane.update(sensors);
+      reloadCenterPane();
     } else {
       Logger.error("No sensor section for greenhouse " + nodeId);
     }
@@ -118,6 +263,7 @@ public class ControlPanelApplication implements GreenhouseEventListener,
           actuator.turnOff();
         }
         actuatorPane.update(actuator);
+        reloadCenterPane();
       } else {
         Logger.error(" actuator not found");
       }
@@ -153,12 +299,11 @@ public class ControlPanelApplication implements GreenhouseEventListener,
 
   private void reloadCenterPane() {
     mainPane.getChildren().clear();
-    mainPane.getChildren().add(centerPane());
+    mainPane.getChildren().add(setMainPage());
+    scene = Default.defaultScene(mainPane);
   }
 
-  private HBox centerPane() {
-    HBox centerPane = new HBox();
-
+  private void addNodeTabs() {
     for(Map.Entry<Integer, SensorActuatorNodeInfo> entry : nodeInfos.entrySet()){
 
       SensorActuatorNodeInfo nodeInfo = entry.getValue();
@@ -172,18 +317,10 @@ public class ControlPanelApplication implements GreenhouseEventListener,
         if(actuator != null){
           node.addActuator(actuator);
         }
+        tabPane.getTabs().add(controller.getGreenhouseWindow(node));
+        //reloadCenterPane();
       }
-      BorderPane nodeBox = new BorderPane(new TitledPane("Greenhouse " + nodeInfo.getId(),
-                                                         createNodeBox(new NodeGuiBox(node),
-                                                                       nodeInfo.getId())));
-      centerPane.getChildren().add(nodeBox);
-
     }
-    return centerPane;
-  }
-
-  private HBox createNodeBox(NodeGuiBox nodeBoxObject, int nodeId){
-    return new HBox(nodeBoxObject.createContent(actuatorPanes.get(nodeId), sensorPanes.get(nodeId)));
   }
 
   @Override
@@ -192,8 +329,12 @@ public class ControlPanelApplication implements GreenhouseEventListener,
     Platform.runLater(Platform::exit);
   }
 
-  public Tab getControlPanelTab(){
-    this.controlPanelTab = new Tab("Control panel", this.mainPane);
-    return this.controlPanelTab;
+  /**
+   * Set the main window for the application.
+   */
+  public void setMainWindow(){
+    this.tabPane.getSelectionModel().select(tabPane.getTabs().get(0));
   }
+
+
 }

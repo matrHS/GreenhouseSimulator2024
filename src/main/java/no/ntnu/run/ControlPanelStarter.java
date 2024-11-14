@@ -5,6 +5,7 @@ import no.ntnu.controlpanel.ControlPanelCommunication;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.FakeCommunicationChannel;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
+import no.ntnu.gui.greenhouse.MainGui;
 import no.ntnu.tools.Logger;
 
 /**
@@ -38,14 +39,13 @@ public class ControlPanelStarter {
     starter.start();
   }
 
-  public ControlPanelApplication start() {
+  public void start() {
     ControlPanelLogic logic = new ControlPanelLogic();
     CommunicationChannel channel = initiateCommunication(logic, fake);
-    ControlPanelApplication controlPanel = new ControlPanelApplication(logic, channel);
+    ControlPanelApplication.startApp(logic, channel);
     // This code is reached only after the GUI-window is closed
-    //Logger.info("Exiting the control panel application");
-    //stopCommunication();
-    return controlPanel;
+    Logger.info("Exiting the control panel application");
+    stopCommunication();
   }
 
   private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) {
