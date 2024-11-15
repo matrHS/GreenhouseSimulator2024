@@ -104,7 +104,6 @@ public class Server extends Thread {
           GreenhouseHandler handler = new GreenhouseHandler(socket, outputStream, inputStream, this);
           greenHouseSockets.put(socket.getPort(),handler);
           handler.start();
-          System.out.println(handler.isAlive());
         }
       } catch(IOException e){
         System.out.println("Could not accept the next client: "+e.getMessage());

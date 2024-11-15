@@ -25,6 +25,8 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
   private SensorActuatorNode node;
 
+  private boolean nodeInfoHasbeenSent;
+
 
 
 
@@ -51,6 +53,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
    * @param args temperature, humidity, windows, fans, heaters
    */
   public void initialize(String[] args) {
+    nodeInfoHasbeenSent = false;
 
     if (argsValidator(args)) {
       int temperature = Integer.parseInt(args[0]);
@@ -137,7 +140,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
    */
   private String[] nodeInfoForAddingNodesOnCPanel(){
     String[] nodeInfo = new String[2 + node.getActuators().size()*2];
-    nodeInfo[1] = String.valueOf(node.getId());
+    nodeInfo[1] = String.valueOf(socket.getLocalPort());
     int index = 2;
     for (Actuator actuator : this.node.getActuators()) {
       nodeInfo[index] = actuator.getType();
@@ -179,7 +182,15 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
    */
   private void sendCommand(String[] command) {
     try {
-      objectOutputStream.writeObject(command);
+      if (!nodeInfoHasbeenSent) {
+        String[] payload = nodeInfoForAddingNodesOnCPanel();
+        payload[0] = "add";
+        Logger.info("sending node info to server");
+        this.objectOutputStream.writeObject(payload);
+        nodeInfoHasbeenSent = true;
+      }else {
+        objectOutputStream.writeObject(command);
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -223,6 +234,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
 
   @Override
   public void sensorsUpdated(List<Sensor> sensors) {
+
     listenForCommands();
     String[] command = new String[sensors.size() + 2];
     command[0] = "data";

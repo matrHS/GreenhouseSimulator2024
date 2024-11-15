@@ -43,7 +43,7 @@ public class GreenhouseHandler extends Thread {
   @Override
   public void run() {
     while (!socket.isClosed()) {
-      testReceiveCommand();
+      receiveCommand();
       sendCommandIfExists();
     }
   }
@@ -55,7 +55,6 @@ public class GreenhouseHandler extends Thread {
   private void sendCommandIfExists() {
     if (this.command.get() != null && this.command.get().length > 0) {
       try {
-        this.command.get()[1] = "2";
         outputStream.writeObject(this.command.get());
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -87,9 +86,10 @@ public class GreenhouseHandler extends Thread {
    * Receive a command from the greenhouse.
    * Currently only sensor readings.
    */
-  public void testReceiveCommand() {
+  public void receiveCommand() {
     try {
       String[] command = (String[]) inputStream.readObject();
+      Logger.info(command[0]);
       server.putCommandControlPanel(command);
 
     } catch (IOException e) {

@@ -41,14 +41,15 @@ public class ControlPanelHandler extends Thread{
   public void run() {
       while (true) {
         try{
-        Logger.info(command.toString());
+       // Logger.info(command.toString());
         socket.setSoTimeout(4000);
         String[] commands = (String[]) inputStream.readObject();
         server.putCommandNode(commands, Integer.parseInt(commands[1]));
       }catch(SocketTimeoutException s){
           if (this.command.get() != null && this.command.get().length > 0) {
             try {
-              outputStream.writeObject(command);
+              outputStream.writeObject(command.get());
+              this.command = new AtomicReference<>();
             } catch (IOException e) {
               throw new RuntimeException(e);
             }

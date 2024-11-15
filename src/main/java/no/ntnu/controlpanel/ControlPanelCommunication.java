@@ -72,8 +72,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       for(int i = 2; i < readings.length-1; i++){
         String[] values = readings[i].split(",");
         String type = values[0].split("=")[1];
-        int value  = Integer.parseInt(values[0].split("=")[1]);
-        String unit = values[0].split("=")[1];
+        float value  = Float.valueOf(values[1].split("=")[1]);
+        String unit = values[2].split("=")[1];
+        unit = unit.replace("}", "");
         list.add(new SensorReading(type, value, unit));
       }
     }
@@ -126,6 +127,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       try {
         socket.setSoTimeout(4000);
         Object object  = inputStream.readObject();
+        Logger.info(object.toString());
        if (object != null){
          this.handlePayload(object);
        }
