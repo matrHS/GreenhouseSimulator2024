@@ -56,6 +56,7 @@ public class GreenhouseHandler extends Thread {
     if (this.command.get() != null && this.command.get().length > 0) {
       try {
         outputStream.writeObject(this.command.get());
+        this.command = new AtomicReference<>();
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -93,7 +94,7 @@ public class GreenhouseHandler extends Thread {
       server.putCommandControlPanel(command);
 
     } catch (IOException e) {
-      Logger.error("Timeout when reading command\n" + e.toString());
+      Logger.error("Socket reset");
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }

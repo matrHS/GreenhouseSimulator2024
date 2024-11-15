@@ -25,7 +25,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
   private SensorActuatorNode node;
 
-  private boolean nodeInfoHasbeenSent;
+  private boolean allowSendReading;
 
 
 
@@ -53,7 +53,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
    * @param args temperature, humidity, windows, fans, heaters
    */
   public void initialize(String[] args) {
-    nodeInfoHasbeenSent = false;
+    allowSendReading = false;
 
     if (argsValidator(args)) {
       int temperature = Integer.parseInt(args[0]);
@@ -164,6 +164,14 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
         case "actuate":
           node.toggleActuator(Integer.parseInt(command[1]));
           break;
+        case "info":
+          String[] payload = nodeInfoForAddingNodesOnCPanel();
+          payload[0] = "add";
+          Logger.info("sending node info to server");
+          sendCommand(payload);
+          allowSendReading = true;
+          break;
+
         default:
           System.out.println("Unknown command: " + command[0]);
       }
@@ -182,15 +190,8 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
    */
   private void sendCommand(String[] command) {
     try {
-      if (!nodeInfoHasbeenSent) {
-        String[] payload = nodeInfoForAddingNodesOnCPanel();
-        payload[0] = "add";
-        Logger.info("sending node info to server");
-        this.objectOutputStream.writeObject(payload);
-        nodeInfoHasbeenSent = true;
-      }else {
+
         objectOutputStream.writeObject(command);
-      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -234,16 +235,17 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
 
   @Override
   public void sensorsUpdated(List<Sensor> sensors) {
-
     listenForCommands();
-    String[] command = new String[sensors.size() + 2];
-    command[0] = "data";
-    command[1] = String.valueOf(socket.getLocalPort());
-    for (int i = 0; i < sensors.size(); i++) {
-      command[i + 2] = sensors.get(i).getReading().toString();
-    }
-    sendCommand(command);
+    if(allowSendReading) {
 
+      String[] command = new String[sensors.size() + 2];
+      command[0] = "data";
+      command[1] = String.valueOf(socket.getLocalPort());
+      for (int i = 0; i < sensors.size(); i++) {
+        command[i + 2] = sensors.get(i).getReading().toString();
+      }
+      sendCommand(command);
+    }
   }
 
 

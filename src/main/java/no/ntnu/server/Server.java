@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import no.ntnu.tools.Logger;
 
 public class Server extends Thread {
   static final int TCP_PORT = 1238;
@@ -34,7 +35,10 @@ public class Server extends Thread {
   public void putCommandNode(String[] commands, int Id) {
     if(greenHouseSockets.containsKey(Id)) {
       greenHouseSockets.get(Id).setCommand(commands);
+    } else if (Id == -1) {
+      greenHouseSockets.forEach((k,v) -> v.setCommand(commands));
     }
+
   }
   public void putCommandControlPanel(String[] commands) {
       controlPanels.forEach((k,v) -> v.setCommand(commands));
@@ -98,7 +102,8 @@ public class Server extends Thread {
           ControlPanelHandler handler = new ControlPanelHandler(socket,outputStream, inputStream, this);
           controlPanels.put(socket.getPort(), handler);
           handler.start();
-          System.out.println("new control panel connected");
+          Logger.info("new control panel connected");
+          this.putCommandNode(new String[]{"info"}, -1);
         }else{
 
           GreenhouseHandler handler = new GreenhouseHandler(socket, outputStream, inputStream, this);

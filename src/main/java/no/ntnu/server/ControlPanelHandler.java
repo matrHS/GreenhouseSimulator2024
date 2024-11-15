@@ -5,6 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import no.ntnu.tools.Logger;
 
@@ -48,7 +50,24 @@ public class ControlPanelHandler extends Thread{
       }catch(SocketTimeoutException s){
           if (this.command.get() != null && this.command.get().length > 0) {
             try {
-              outputStream.writeObject(command.get());
+              Logger.info(Arrays.toString(this.command.get()));
+              String[] allowedCommands = new String[]{"set", "get", "add", "remove", "data", "state", "update"};
+              ArrayList<String[]> commandQueue = new ArrayList<>();
+              String[] allCommands = this.command.get();
+              int start = 0;
+              for (int i = 2; i < allCommands.length; i++) {
+                for (int j = 0; j < allowedCommands.length; j++) {
+                  if (allCommands[i].equals(allowedCommands[j]) || i == allCommands.length - 1){
+                    commandQueue.add(Arrays.copyOfRange(allCommands, start, i));
+                    start = i;
+                  }
+                }
+              }
+              for(String[] command : commandQueue){
+                if(command != null && command.length > 0) {
+                  outputStream.writeObject(command);
+                }
+              }
               this.command = new AtomicReference<>();
             } catch (IOException e) {
               throw new RuntimeException(e);
@@ -62,6 +81,16 @@ public class ControlPanelHandler extends Thread{
     }
 
   public void setCommand(String[] commands) {
-    command.set(commands);
+    String[] queued = this.command.get();
+    String[] all;
+    if(queued != null){
+      all = new String[queued.length + commands.length];
+      System.arraycopy(queued, 0, all, 0, queued.length);
+      System.arraycopy(commands, 0, all, queued.length, commands.length);
+    }else{
+      all = commands;
+    }
+
+    this.command.set(all);
   }
 }
