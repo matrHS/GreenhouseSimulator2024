@@ -16,8 +16,10 @@ public class ControlPanelHandler extends Thread{
 
   private ObjectOutputStream outputStream;
 
+  private final String[] allowedCommands = new String[]{"set", "get", "add", "remove", "data", "state", "update"};
+
   private  ObjectInputStream inputStream;
-  private AtomicReference<String[]> command;
+  private AtomicReference<String[]> cmdStack;
   private Server server;
 
   /**
@@ -34,45 +36,22 @@ public class ControlPanelHandler extends Thread{
     this.outputStream = output;
     this.inputStream = input;
     this.server = server;
-    this.command = new AtomicReference<>();
-
-
+    this.cmdStack = new AtomicReference<>();
   }
 
+  /**
+   * The main run method of this handler.
+   */
   @Override
   public void run() {
       while (true) {
         try{
-       // Logger.info(command.toString());
         socket.setSoTimeout(4000);
         String[] commands = (String[]) inputStream.readObject();
         server.putCommandNode(commands, Integer.parseInt(commands[1]));
       }catch(SocketTimeoutException s){
-          if (this.command.get() != null && this.command.get().length > 0) {
-            try {
-              Logger.info(Arrays.toString(this.command.get()));
-              String[] allowedCommands = new String[]{"set", "get", "add", "remove", "data", "state", "update"};
-              ArrayList<String[]> commandQueue = new ArrayList<>();
-              String[] allCommands = this.command.get();
-              int start = 0;
-              for (int i = 2; i < allCommands.length; i++) {
-                for (int j = 0; j < allowedCommands.length; j++) {
-                  if (allCommands[i].equals(allowedCommands[j]) || i == allCommands.length - 1){
-                    commandQueue.add(Arrays.copyOfRange(allCommands, start, i));
-                    start = i;
-                  }
-                }
-              }
-              for(String[] command : commandQueue){
-                if(command != null && command.length > 0) {
-                  outputStream.writeObject(command);
-                }
-              }
-              this.command = new AtomicReference<>();
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }}catch(IOException e){
+          processCommandsOnStack();
+        }catch(IOException e){
           throw new RuntimeException(e);
         } catch(ClassNotFoundException e){
           throw new RuntimeException(e);
@@ -80,17 +59,63 @@ public class ControlPanelHandler extends Thread{
       }
     }
 
-  public void setCommand(String[] commands) {
-    String[] queued = this.command.get();
-    String[] all;
-    if(queued != null){
-      all = new String[queued.length + commands.length];
-      System.arraycopy(queued, 0, all, 0, queued.length);
-      System.arraycopy(commands, 0, all, queued.length, commands.length);
-    }else{
-      all = commands;
+  /**
+   * Processes all the commands on the atomic stack and then sends each command sequentially to the
+   * control panel.
+   *
+   * TODO: rewrite this to use a queue and fix the issue of it adding empty objects.
+   */
+
+  private void processCommandsOnStack(){
+      if (this.cmdStack.get() != null && this.cmdStack.get().length > 0) {
+          ArrayList<String[]> commandQueue = new ArrayList<>();
+          String[] allCommands = this.cmdStack.get();
+          int start = 0;
+          for (int i = 2; i < allCommands.length; i++) {
+            for (String allowedCommand : allowedCommands) {
+              if (allCommands[i].equals(allowedCommand) || i == allCommands.length - 1) {
+                commandQueue.add(Arrays.copyOfRange(allCommands, start, i));
+                start = i;
+              }
+            }
+          }
+          writeAllCommandsToCP(commandQueue);
+      }
     }
 
-    this.command.set(all);
+    /**
+     * Writes all processed commands in the queue to the control panel.
+     *
+     */
+
+    private void writeAllCommandsToCP(ArrayList<String[]> commandQueue){
+      for(String[] command : commandQueue){
+        if(command != null && command.length > 0) {
+          try {
+            outputStream.writeObject(command);
+          } catch (IOException e) {
+            Logger.info("failed to write to control panels");
+          }
+        }
+      }
+      this.cmdStack = new AtomicReference<>();
+    }
+
+  /**
+   * Sets the command queue by adding more and more commands at the end.
+   * @param command the command to be added at the end of the queue.
+   */
+  public void setCmdStack(String[] command) {
+    String[] queued = this.cmdStack.get();
+    String[] all;
+    if(queued != null){
+      all = new String[queued.length + command.length];
+      System.arraycopy(queued, 0, all, 0, queued.length);
+      System.arraycopy(command, 0, all, queued.length, command.length);
+    }else{
+      all = command;
+    }
+
+    this.cmdStack.set(all);
   }
 }

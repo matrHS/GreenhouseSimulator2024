@@ -41,7 +41,7 @@ public class Server extends Thread {
 
   }
   public void putCommandControlPanel(String[] commands) {
-      controlPanels.forEach((k,v) -> v.setCommand(commands));
+      controlPanels.forEach((k,v) -> v.setCmdStack(commands));
   }
 
   public int init(){
