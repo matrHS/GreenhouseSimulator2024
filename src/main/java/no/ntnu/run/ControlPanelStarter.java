@@ -1,6 +1,7 @@
 package no.ntnu.run;
 
 import no.ntnu.controlpanel.CommunicationChannel;
+import no.ntnu.controlpanel.ControlPanelCommunication;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.FakeCommunicationChannel;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
@@ -60,7 +61,7 @@ public class ControlPanelStarter {
     // TODO - here you initiate TCP/UDP socket communication
     // You communication class(es) may want to get reference to the logic and call necessary
     // logic methods when events happen (for example, when sensor data is received)
-    return null;
+    return new ControlPanelCommunication(logic);
   }
 
   private CommunicationChannel initiateFakeSpawner(ControlPanelLogic logic) {
