@@ -69,7 +69,6 @@ public class ControlPanelHandler extends Thread{
    * Processes all the commands on the atomic stack and then sends each command sequentially to the
    * control panel.
    *
-   * TODO: rewrite this to use a queue and fix the issue of it adding empty objects.
    */
   private void processNextQueuedElement(){
     while(!commandQueue.isEmpty()){
@@ -77,68 +76,17 @@ public class ControlPanelHandler extends Thread{
     }
   }
 
-  private void processCommandsOnStack(){
-      if (this.cmdStack.get() != null && this.cmdStack.get().length > 0) {
-          ArrayList<String[]> commandQueue = new ArrayList<>();
-          String[] allCommands = this.cmdStack.get();
-          int start = 0;
-          for (int i = 2; i < allCommands.length; i++) {
-            for (String allowedCommand : allowedCommands) {
-              if (allCommands[i].equals(allowedCommand)) {
-                commandQueue.add(Arrays.copyOfRange(allCommands, start, i));
-                start = i;
-              }else if( i == allCommands.length - 1){
-                commandQueue.add(Arrays.copyOfRange(allCommands, start, i + 1));
-              }
-            }
-          }
-          writeAllCommandsToCP(commandQueue);
-      }
-    }
-
-    /**
-     * Writes all processed commands in the queue to the control panel.
-     *
-     */
-
-    private void sendCommandToCP(String[] command){
-      try {
-        outputStream.writeObject(command);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    private void writeAllCommandsToCP(ArrayList<String[]> commandQueue){
-      for(String[] command : commandQueue){
-        if(command != null && command.length > 0) {
-          try {
-            outputStream.writeObject(command);
-          } catch (IOException e) {
-            Logger.info("failed to write to control panels");
-          }
-        }
-      }
-      this.cmdStack = new AtomicReference<>();
-    }
-
   /**
-   * Sets the command queue by adding more and more commands at the end.
-   * @param command the command to be added at the end of the queue.
+   * Writes all processed commands in the queue to the control panel.
+   *
    */
-  public void setCmdStack(String[] command) {
-    String[] queued = this.cmdStack.get();
-    String[] all;
-    if(queued != null){
-      all = new String[queued.length + command.length];
-      System.arraycopy(queued, 0, all, 0, queued.length);
-      System.arraycopy(command, 0, all, queued.length, command.length);
-    }else{
-      all = command;
+  private void sendCommandToCP(String[] command){
+    try {
+      outputStream.writeObject(command);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-
-    this.cmdStack.set(all);
   }
-
   public void putOnQueue(String[] command){
     try {
       this.commandQueue.put(command);
