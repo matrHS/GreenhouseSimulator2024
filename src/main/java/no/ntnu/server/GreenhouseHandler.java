@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.List;
-import no.ntnu.greenhouse.Sensor;
-import no.ntnu.listeners.greenhouse.SensorListener;
+import java.util.concurrent.atomic.AtomicReference;
 import no.ntnu.tools.Logger;
 
 public class GreenhouseHandler extends Thread {
@@ -15,17 +13,22 @@ public class GreenhouseHandler extends Thread {
   private ObjectInputStream inputStream;
   private ObjectOutputStream outputStream;
 
+  private AtomicReference<String[]> command;
+  private Server server;
+
   /**
    * Constructor for the GreenhouseHandler
    *
    * @param clientSocket The greenhouse client socket
    */
-  public GreenhouseHandler(Socket clientSocket, ObjectOutputStream outputStream, ObjectInputStream inputStream) {
+  public GreenhouseHandler(Socket clientSocket, ObjectOutputStream outputStream, ObjectInputStream inputStream, Server server) {
     this.socket = clientSocket;
     try {
       System.out.println("I am greenouse: " + socket.getPort());
       this.outputStream = outputStream;
       this.inputStream = inputStream;
+      this.command = new AtomicReference<>();
+      this.server = server;
       socket.setSoTimeout(4000);
 
     } catch (IOException e) {
@@ -40,7 +43,23 @@ public class GreenhouseHandler extends Thread {
   @Override
   public void run() {
     while (!socket.isClosed()) {
-      testReceiveCommand();
+      receiveCommand();
+      sendCommandIfExists();
+    }
+  }
+
+  public void setCommand(String[] commands ){
+    this.command.set(commands);
+  }
+
+  private void sendCommandIfExists() {
+    if (this.command.get() != null && this.command.get().length > 0) {
+      try {
+        outputStream.writeObject(this.command.get());
+        this.command = new AtomicReference<>();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -55,7 +74,10 @@ public class GreenhouseHandler extends Thread {
       outputStream.writeObject(command);
       System.out.println("sent command");
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      if(this.command.get() != null && this.command.get().length > 0)
+      {
+        Logger.info(this.command.get()[0]);
+      }
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -65,15 +87,14 @@ public class GreenhouseHandler extends Thread {
    * Receive a command from the greenhouse.
    * Currently only sensor readings.
    */
-  public void testReceiveCommand() {
+  public void receiveCommand() {
     try {
       String[] command = (String[]) inputStream.readObject();
-      for (String s : command) {
-        System.out.println(s);
-      }
+      Logger.info(command[0]);
+      server.putCommandControlPanel(command);
 
     } catch (IOException e) {
-      Logger.error("Timeout when reading command\n" + e.toString());
+      Logger.error("Socket reset");
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }

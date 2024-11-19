@@ -141,7 +141,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   @Override
   public void onNodeAdded(SensorActuatorNodeInfo nodeInfo) {
     Platform.runLater(() -> addNode(nodeInfo));
-    reloadCenterPane();
   }
 
   @Override
@@ -154,7 +153,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
           mainPane.getChildren().clear();
           mainPane.getChildren().add(new HBox(new Label("No greenhouses found")));
         }
-        reloadCenterPane();
+        //reloadCenterPane();
       });
       Logger.info("Greenhouse " + nodeId + " removed");
     } else {
@@ -168,7 +167,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     SensorPane sensorPane = sensorPanes.get(nodeId);
     if (sensorPane != null) {
       sensorPane.update(sensors);
-      reloadCenterPane();
+      //reloadCenterPane();
     } else {
       Logger.error("No sensor section for greenhouse " + nodeId);
     }
@@ -210,13 +209,13 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     sensorPanes.remove(nodeId);
     actuatorPanes.remove(nodeId);
     nodeInfos.remove(nodeId);
-    reloadCenterPane();
+    //reloadCenterPane();
   }
 
   private void addNode(SensorActuatorNodeInfo nodeInfo) {
     if (nodeInfos.get(nodeInfo.getId()) == null) {
       nodeInfos.put(nodeInfo.getId(), nodeInfo);
-      reloadCenterPane();
+      //reloadCenterPane();
     } else {
       Logger.info("Duplicate node spawned, ignore it");
     }
@@ -225,7 +224,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private void reloadCenterPane() {
     mainPane.getChildren().clear();
     mainPane.getChildren().add(setMainPage());
-    scene = Default.defaultScene(mainPane);
   }
 
   private void addNodeTabs() {
