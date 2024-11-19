@@ -58,6 +58,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private final Map<Integer, SensorPane> sensorPanes = new HashMap<>();
   private final Map<Integer, ActuatorPane> actuatorPanes = new HashMap<>();
   private final Map<Integer, SensorActuatorNodeInfo> nodeInfos = new HashMap<>();
+  private final Map<Integer, Tab> nodeTabs = new HashMap<>();
 
 
   public static void startApp(ControlPanelLogic logic, CommunicationChannel channel) {
@@ -91,6 +92,34 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     channel.start();
   }
 
+  private static Label createEmptyContent() {
+    Label l = new Label("Waiting for node data...");
+    l.setAlignment(Pos.CENTER);
+    return l;
+  }
+
+  @Override
+  public void onNodeAdded(SensorActuatorNodeInfo nodeInfo) {
+    Platform.runLater(() -> addNodeTab(nodeInfo));
+  }
+
+  @Override
+  public void onNodeRemoved(int nodeId) {
+    SensorActuatorNodeInfo nodeInfo = nodeInfos.get(nodeId);
+    if (nodeInfo != null) {
+      Platform.runLater(() -> {
+        forgetNodeInfo(nodeId);
+        if (nodeInfos.isEmpty()) {
+          mainPane.getChildren().clear();
+          mainPane.getChildren().add(new HBox(new Label("No greenhouses found")));
+        }
+      });
+      Logger.info("Greenhouse " + nodeId + " removed");
+    } else {
+      Logger.error("Can't remove greenhouse " + nodeId);
+    }
+  }
+
   /**
    * Set the scene for the application.
    *
@@ -107,11 +136,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     Logger.info("GUI subscribes to lifecycle events");
   }
 
-  private static Label createEmptyContent() {
-    Label l = new Label("Waiting for node data...");
-    l.setAlignment(Pos.CENTER);
-    return l;
-  }
+
 
   /**
    * Creates the tab pane for the application.
@@ -123,7 +148,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       VBox headerPane = Default.setHeader(this.controller);
 
       this.tabPane = new TabPane(controller.getHomeTab());
-      addNodeTabs();
       tabPane.getStyleClass().add("tab-pane");
       tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
@@ -137,37 +161,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     return null;
   }
 
-
-  @Override
-  public void onNodeAdded(SensorActuatorNodeInfo nodeInfo) {
-    Platform.runLater(() -> addNode(nodeInfo));
-  }
-
-  @Override
-  public void onNodeRemoved(int nodeId) {
-    SensorActuatorNodeInfo nodeInfo = nodeInfos.get(nodeId);
-    if (nodeInfo != null) {
-      Platform.runLater(() -> {
-        forgetNodeInfo(nodeId);
-        if (nodeInfos.isEmpty()) {
-          mainPane.getChildren().clear();
-          mainPane.getChildren().add(new HBox(new Label("No greenhouses found")));
-        }
-        //reloadCenterPane();
-      });
-      Logger.info("Greenhouse " + nodeId + " removed");
-    } else {
-      Logger.error("Can't remove greenhouse " + nodeId);
-    }
-  }
-
   @Override
   public void onSensorData(int nodeId, List<SensorReading> sensors) {
     Logger.info("Sensor data from greenhouse " + nodeId);
     SensorPane sensorPane = sensorPanes.get(nodeId);
     if (sensorPane != null) {
       sensorPane.update(sensors);
-      //reloadCenterPane();
     } else {
       Logger.error("No sensor section for greenhouse " + nodeId);
     }
@@ -187,7 +186,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
           actuator.turnOff();
         }
         actuatorPane.update(actuator);
-        reloadCenterPane();
       } else {
         Logger.error(" actuator not found");
       }
@@ -209,13 +207,13 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     sensorPanes.remove(nodeId);
     actuatorPanes.remove(nodeId);
     nodeInfos.remove(nodeId);
-    //reloadCenterPane();
   }
+
 
   private void addNode(SensorActuatorNodeInfo nodeInfo) {
     if (nodeInfos.get(nodeInfo.getId()) == null) {
       nodeInfos.put(nodeInfo.getId(), nodeInfo);
-      //reloadCenterPane();
+
     } else {
       Logger.info("Duplicate node spawned, ignore it");
     }
@@ -226,25 +224,35 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     mainPane.getChildren().add(setMainPage());
   }
 
-  private void addNodeTabs() {
-    for(Map.Entry<Integer, SensorActuatorNodeInfo> entry : nodeInfos.entrySet()){
-
-      SensorActuatorNodeInfo nodeInfo = entry.getValue();
-      SensorPane sensorPane = new SensorPane();
-      sensorPanes.put(nodeInfo.getId(), sensorPane);
-      ActuatorPane actuatorPane = new ActuatorPane(nodeInfo.getActuators());
-      actuatorPanes.put(nodeInfo.getId(), actuatorPane);
-
-      SensorActuatorNode node = new SensorActuatorNode(nodeInfo.getId());
-      for (Actuator actuator : nodeInfo.getActuators()) {
-        if(actuator != null){
-          node.addActuator(actuator);
-        }
-        tabPane.getTabs().add(controller.getGreenhouseWindow(node));
-        //reloadCenterPane();
-      }
+  private void addNodeTab(SensorActuatorNodeInfo nodeInfo) {
+    if (tabPane == null) {
+      tabPane = new TabPane();
+      scene.setRoot(tabPane);
+    }
+    Tab nodeTab = nodeTabs.get(nodeInfo.getId());
+    if (nodeTab == null) {
+      nodeInfos.put(nodeInfo.getId(), nodeInfo);
+      tabPane.getTabs().add(createNodeTab(nodeInfo));
+    } else {
+      Logger.info("Duplicate node spawned, ignore it");
     }
   }
+
+  private Tab createNodeTab(SensorActuatorNodeInfo nodeInfo) {
+    Tab tab = new Tab("Node " + nodeInfo.getId());
+    SensorPane sensorPane = createEmptySensorPane();
+    sensorPanes.put(nodeInfo.getId(), sensorPane);
+    ActuatorPane actuatorPane = new ActuatorPane(nodeInfo.getActuators());
+    actuatorPanes.put(nodeInfo.getId(), actuatorPane);
+    tab.setContent(new VBox(sensorPane, actuatorPane));
+    nodeTabs.put(nodeInfo.getId(), tab);
+    return tab;
+  }
+
+  private static SensorPane createEmptySensorPane() {
+    return new SensorPane();
+  }
+
 
   @Override
   public void onCommunicationChannelClosed() {
@@ -252,12 +260,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     Platform.runLater(Platform::exit);
   }
 
-  /**
-   * Set the main window for the application.
-   */
-  public void setMainWindow(){
-    this.tabPane.getSelectionModel().select(tabPane.getTabs().get(0));
-  }
 
 
 }
