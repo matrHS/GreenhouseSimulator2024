@@ -29,7 +29,7 @@ public class GreenhouseHandler extends Thread {
       this.inputStream = inputStream;
       this.command = new AtomicReference<>();
       this.server = server;
-      socket.setSoTimeout(4000);
+      socket.setSoTimeout(1000);
 
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -90,7 +90,7 @@ public class GreenhouseHandler extends Thread {
   public void receiveCommand() {
     try {
       String[] command = (String[]) inputStream.readObject();
-      Logger.info(command[0]);
+      //Logger.info(command[0]);
       server.putCommandControlPanel(command);
 
     } catch (IOException e) {

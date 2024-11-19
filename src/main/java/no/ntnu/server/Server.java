@@ -5,68 +5,77 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import no.ntnu.tools.Logger;
 
-public class Server extends Thread {
+public class Server {
   static final int TCP_PORT = 1238;
   private HashMap<Integer, GreenhouseHandler> greenHouseSockets;
   private HashMap<Integer, ControlPanelHandler> controlPanels;
   private ServerSocket serverSocket;
 
+  private HashMap<String, String[]> latestReading;
+
+  /**
+   * Main method for the server
+   */
   public static void main(String[] args){
     Server server = new Server();
     server.run();
   }
 
-  public Server(HashMap<Integer, Socket> greenHouses){
-    controlPanels = new HashMap<>();
-    serverSocket = openListeningPort();
-  }
-
+  /**
+   * Constructor for the server.
+   */
   public Server(){
     controlPanels = new HashMap<>();
     greenHouseSockets = new HashMap<>();
     serverSocket = openListeningPort();
-
-
   }
 
+  /**
+   * Put a command on the command queue for the greenhouse node.
+   * @param commands The commands to put on the queue
+   * @param Id The id of the greenhouse node to send the command to.
+   */
   public void putCommandNode(String[] commands, int Id) {
     if(greenHouseSockets.containsKey(Id)) {
       greenHouseSockets.get(Id).setCommand(commands);
     } else if (Id == -1) {
       greenHouseSockets.forEach((k,v) -> v.setCommand(commands));
     }
-
   }
+
+  /**
+   * Put a command on the command queue for the control panel.
+   * @param commands The commands to put on the queue
+   */
   public void putCommandControlPanel(String[] commands) {
-      controlPanels.forEach((k,v) -> v.putOnQueue(commands));
-  }
+    if(controlPanels.isEmpty()){
+      latestReading.put(commands[1], commands);
+    }else {
+      controlPanels.forEach((k, v) -> v.putOnQueue(commands));
 
-  public int init(){
-    return serverSocket.getLocalPort();
+    }
   }
 
   /**
    * Run the server, and handle the client.
    */
-  @Override
+  @SuppressWarnings("all")
   public void run(){
-    System.out.println("server starting");
-    System.out.println("Running on port: " + serverSocket.getLocalPort());
+    Logger.info("server starting");
+    Logger.info("Running on port: " + serverSocket.getLocalPort());
     while(true){
 
       Socket socket = acceptNextClient();
-      System.out.println("Connected to: " + socket.getPort());
-      System.out.println("holding sockets for: " + greenHouseSockets.keySet() + " and "
+      Logger.info("Connected to: " + socket.getPort());
+      Logger.info("holding sockets for: " + greenHouseSockets.keySet() + " and "
           + controlPanels.keySet());
-
-
-
     }
   }
-
 
   /**
    * Open a listening port
@@ -109,6 +118,9 @@ public class Server extends Thread {
           GreenhouseHandler handler = new GreenhouseHandler(socket, outputStream, inputStream, this);
           greenHouseSockets.put(socket.getPort(),handler);
           handler.start();
+          if(!controlPanels.isEmpty()){
+            this.putCommandNode(new String[]{"info"}, -1);
+          }
         }
       } catch(IOException e){
         System.out.println("Could not accept the next client: "+e.getMessage());
