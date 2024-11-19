@@ -7,6 +7,9 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import no.ntnu.tools.Logger;
 
@@ -20,6 +23,8 @@ public class ControlPanelHandler extends Thread{
 
   private  ObjectInputStream inputStream;
   private AtomicReference<String[]> cmdStack;
+
+  private LinkedBlockingQueue<String[]> commandQueue;
   private Server server;
 
   /**
@@ -37,6 +42,7 @@ public class ControlPanelHandler extends Thread{
     this.inputStream = input;
     this.server = server;
     this.cmdStack = new AtomicReference<>();
+    this.commandQueue = new LinkedBlockingQueue<>();
   }
 
   /**
@@ -50,7 +56,7 @@ public class ControlPanelHandler extends Thread{
         String[] commands = (String[]) inputStream.readObject();
         server.putCommandNode(commands, Integer.parseInt(commands[1]));
       }catch(SocketTimeoutException s){
-          processCommandsOnStack();
+         processNextQueuedElement();
         }catch(IOException e){
           throw new RuntimeException(e);
         } catch(ClassNotFoundException e){
@@ -65,6 +71,11 @@ public class ControlPanelHandler extends Thread{
    *
    * TODO: rewrite this to use a queue and fix the issue of it adding empty objects.
    */
+  private void processNextQueuedElement(){
+    while(!commandQueue.isEmpty()){
+         sendCommandToCP(commandQueue.poll());
+    }
+  }
 
   private void processCommandsOnStack(){
       if (this.cmdStack.get() != null && this.cmdStack.get().length > 0) {
@@ -73,9 +84,11 @@ public class ControlPanelHandler extends Thread{
           int start = 0;
           for (int i = 2; i < allCommands.length; i++) {
             for (String allowedCommand : allowedCommands) {
-              if (allCommands[i].equals(allowedCommand) || i == allCommands.length - 1) {
+              if (allCommands[i].equals(allowedCommand)) {
                 commandQueue.add(Arrays.copyOfRange(allCommands, start, i));
                 start = i;
+              }else if( i == allCommands.length - 1){
+                commandQueue.add(Arrays.copyOfRange(allCommands, start, i + 1));
               }
             }
           }
@@ -88,6 +101,13 @@ public class ControlPanelHandler extends Thread{
      *
      */
 
+    private void sendCommandToCP(String[] command){
+      try {
+        outputStream.writeObject(command);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
     private void writeAllCommandsToCP(ArrayList<String[]> commandQueue){
       for(String[] command : commandQueue){
         if(command != null && command.length > 0) {
@@ -117,5 +137,13 @@ public class ControlPanelHandler extends Thread{
     }
 
     this.cmdStack.set(all);
+  }
+
+  public void putOnQueue(String[] command){
+    try {
+      this.commandQueue.put(command);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
