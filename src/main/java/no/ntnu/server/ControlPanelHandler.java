@@ -49,10 +49,11 @@ public class ControlPanelHandler extends Thread{
    * The main run method of this handler.
    */
   @Override
+  @SuppressWarnings("InfiniteLoopStatement")
   public void run() {
       while (true) {
         try{
-        socket.setSoTimeout(4000);
+        socket.setSoTimeout(1000);
         String[] commands = (String[]) inputStream.readObject();
         server.putCommandNode(commands, Integer.parseInt(commands[1]));
       }catch(SocketTimeoutException s){
