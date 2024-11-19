@@ -22,6 +22,6 @@ public class GreenhouseGuiStarter {
       fake = true;
       Logger.info("Using FAKE events");
     }
-    MainGui.mainApp(fake);
+    //MainGui.mainApp(fake);
   }
 }

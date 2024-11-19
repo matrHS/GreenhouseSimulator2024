@@ -20,8 +20,6 @@ public class Default {
     try {
       banner = new Image(String.valueOf(Default.class.getResource("/images/header.png")));
       ImageView bannerView = new ImageView(banner);
-      bannerView.getStyleClass().add("header-logo");
-      bannerView.setOnMouseClicked(actionEvent -> controller.setMainPageTab());
       bannerPane.getChildren().addAll(bannerView);
 
     } catch (NullPointerException e) {

@@ -32,115 +32,26 @@ import no.ntnu.tools.Logger;
 /**
  * Run a greenhouse simulation with a graphical user interface (GUI), with JavaFX.
  */
-public class MainGui extends Application implements NodeStateListener {
-  private Scene scene; // The scene for the app
-  Stage stage; // The stage for the app
+public class MainGui {
+
   private MainGuiController controller; // the controller for the main page
-  TabPane tabPane; // The tab pane for the app
-  private static GreenhouseSimulator simulator; // The simulator for the greenhouse
-  private static Map<Integer, SensorActuatorNode> nodes;
-  private static Boolean fake;
+  Tab mainTab; // The tab pane for the app
 
-  /**
-   * Start the GUI Application.
-   *
-   * @param fake When true, emulate fake events instead of opening real sockets
-   */
-  public static void mainApp(Boolean fake){
-    MainGui.fake = fake;
-    Logger.info("Running greenhouse simulator with JavaFX GUI...");
-    simulator = new GreenhouseSimulator(fake);
-    nodes = simulator.getNodes();
-    launch();
-  }
-
-  /**
-   * Start is responsible for starting the application and
-   *  setting up the main page.
-   *
-   * @param primaryStage The stage for the application
-   * @throws Exception If the application can't start
-   */
-  @Override
-  public void start(Stage primaryStage) throws Exception {
-    this.stage = primaryStage;
-    stage.setTitle("Greenhouse Simulator");
-
-    //this.controller = new MainGuiController(this);
-
-    simulator.initialize();
-    simulator.subscribeToLifecycleUpdates(this);
-    this.stage.setOnCloseRequest(event -> closeApplication());
-    simulator.start();
-
-    BorderPane root = setMainPage();
-    root.getStyleClass().add("root");
-
-    scene = Default.defaultScene(root);
-    scene.setCursor(Cursor.DEFAULT);
-    this.setScene(scene);
-  }
-
-  /**
-   * Set the scene for the application.
-   *
-   * @param scene The scene to set
-   */
-  public void setScene(Scene scene){
-    scene.getStylesheets().add(getClass().getResource("/css/stylesheet.css").toExternalForm());
-    this.stage.setMaximized(true);
-    stage.getIcons().add(new Image(
-        Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
-               .toExternalForm()));
-    stage.setScene(scene);
-    stage.show();
-    Logger.info("GUI subscribes to lifecycle events");
-  }
-
-  /**
-   * Close the application.
-   */
-  private void closeApplication() {
-    Logger.info("Closing Greenhouse application...");
-    simulator.stop();
+  public MainGui(MainGuiController controller) {
+    this.controller = controller;
     try {
-      stop();
+      this.mainTab = setMainPage();
     } catch (Exception e) {
-      Logger.error("Could not stop the application: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Creates the tab pane for the application.
-   *
-   * @return The tab pane for the application.
-   */
-  private BorderPane setMainPage() throws Exception{
-    VBox headerPane = Default.setHeader(this.controller);
-
-    this.tabPane = new TabPane(createMainScene());
-    //this.tabPane.getTabs().add(controller.getControlPanelTab(this.fake));
-    for(Map.Entry<Integer, SensorActuatorNode> entry : nodes.entrySet()){
-      SensorActuatorNode node = entry.getValue();
-      tabPane.getTabs().add(controller.getGreenhouseWindow(node));
+      Logger.error("Error in MainGui: " + e.getMessage());
     }
 
-    tabPane.getStyleClass().add("tab-pane");
-    tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-
-    BorderPane root = new BorderPane();
-    VBox top = new VBox(headerPane,tabPane);
-    root.setTop(top);
-
-    return root;
   }
-
   /**
    * Create the main scene for the application.
    *
    * @return The main scene for the application
    */
-  private Tab createMainScene(){
+  private Tab setMainPage(){
     BorderPane mainScene = new BorderPane();
 
     mainScene.getStyleClass().add("main-center-pane");
@@ -210,46 +121,8 @@ public class MainGui extends Application implements NodeStateListener {
     return description;
   }
 
-  /**
-   * Set the main window for the application.
-   */
-  public void setMainWindow(){
-    this.tabPane.getSelectionModel().select(tabPane.getTabs().get(0));
+
+  public Tab getMainTab() {
+    return this.mainTab;
   }
-
-  /**
-   * Called when a node is ready.
-   *
-   * @param node the node which is ready now
-   */
-
-  @Override
-  public void onNodeReady(SensorActuatorNode node) {
-     Logger.info("Starting window for node " + node.getId());
-    /*
-    NodeGuiWindow window = new NodeGuiWindow(node);
-    nodeWindows.put(node, window);
-    window.show();
-
-      */
-  }
-
-  /**
-   * Called when a node is stopped.
-   *
-   * @param node The node which is stopped
-   */
-
-  @Override
-  public void onNodeStopped(SensorActuatorNode node) {
-      /*
-      NodeGuiWindow window = nodeWindows.remove(node);
-    if (window != null) {
-      Platform.runLater(window::close);
-      if (nodeWindows.isEmpty()) {
-        Platform.runLater(this.stage::close);
-      }
-    }  */
-  }
-
 }
