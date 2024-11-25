@@ -11,11 +11,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
 import no.ntnu.tools.Logger;
 
-public class GreenhouseNode implements SensorListener, NodeStateListener {
+public class GreenhouseNode implements SensorListener, NodeStateListener, ActuatorListener {
   private final static String SERVER_HOST = "localhost";
   private int TCP_PORT = 1238;
   private ObjectInputStream objectInputStream;
@@ -252,10 +253,16 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
   @Override
   public void onNodeReady(SensorActuatorNode node) {
     node.addSensorListener(this);
+    node.addActuatorListener(this);
   }
 
   @Override
   public void onNodeStopped(SensorActuatorNode node) {
+
+  }
+
+  @Override
+  public void actuatorUpdated(int nodeId, Actuator actuator) {
 
   }
 }
