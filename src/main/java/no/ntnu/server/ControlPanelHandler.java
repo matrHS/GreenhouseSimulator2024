@@ -55,7 +55,15 @@ public class ControlPanelHandler extends Thread{
         try{
         socket.setSoTimeout(1000);
         String[] commands = (String[]) inputStream.readObject();
-        server.putCommandNode(commands, Integer.parseInt(commands[1]));
+          int Id;
+          if(commands[0].equals("set")){
+            String[] IDs = commands[1].split(":");
+            commands[1] = IDs[1];
+            Id = Integer.parseInt(IDs[0]);
+          }else{
+            Id = Integer.parseInt(commands[1]);
+          }
+        server.putCommandNode(commands, Id);
       }catch(SocketTimeoutException s){
          processNextQueuedElement();
         }catch(IOException e){

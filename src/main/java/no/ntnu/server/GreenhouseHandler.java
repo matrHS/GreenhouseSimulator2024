@@ -21,7 +21,8 @@ public class GreenhouseHandler extends Thread {
    *
    * @param clientSocket The greenhouse client socket
    */
-  public GreenhouseHandler(Socket clientSocket, ObjectOutputStream outputStream, ObjectInputStream inputStream, Server server) {
+  public GreenhouseHandler(Socket clientSocket, ObjectOutputStream outputStream,
+                           ObjectInputStream inputStream, Server server) {
     this.socket = clientSocket;
     try {
       System.out.println("I am greenouse: " + socket.getPort());

@@ -32,7 +32,15 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
 
   @Override
   public void sendActuatorChange(int nodeId, int actuatorId, boolean isOn) {
-
+    String[] payload = new String[3];
+    payload[0] = "set";
+    payload[1] = nodeId + ":" + actuatorId;
+    payload[2] = Boolean.toString(isOn);
+    try {
+      outputStream.writeObject(payload);
+    } catch (IOException e) {
+      Logger.error("Failed to send actuator change");
+    }
   }
 
   @Override
@@ -88,7 +96,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
         case "add":
           SensorActuatorNodeInfo nodeInfo = new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
           for (int i = 2 ; i < payload.length; i+=2) {
-            Actuator actuator = new Actuator(payload[i], Integer.parseInt(payload[i+1]));
+            Actuator actuator = new Actuator(Integer.parseInt(payload[i+1]), payload[i], Integer.parseInt(payload[1]));
             nodeInfo.addActuator(actuator);
           }
           logic.onNodeAdded(nodeInfo);
