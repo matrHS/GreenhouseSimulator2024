@@ -5,6 +5,7 @@ import no.ntnu.controlpanel.ControlPanelCommunication;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.FakeCommunicationChannel;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
+import no.ntnu.gui.greenhouse.MainGui;
 import no.ntnu.tools.Logger;
 
 /**
@@ -38,7 +39,7 @@ public class ControlPanelStarter {
     starter.start();
   }
 
-  private void start() {
+  public void start() {
     ControlPanelLogic logic = new ControlPanelLogic();
     CommunicationChannel channel = initiateCommunication(logic, fake);
     ControlPanelApplication.startApp(logic, channel);
