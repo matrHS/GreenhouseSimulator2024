@@ -53,7 +53,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
    * @param args temperature, humidity, windows, fans, heaters
    */
   public void initialize(String[] args) {
-    allowSendReading = false;
+    allowSendReading = true;
 
     if (argsValidator(args)) {
       int temperature = Integer.parseInt(args[0]);
