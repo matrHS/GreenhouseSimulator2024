@@ -33,6 +33,7 @@ public class Server {
     controlPanels = new HashMap<>();
     greenHouseSockets = new HashMap<>();
     serverSocket = openListeningPort();
+    latestReading = new HashMap<>();
   }
 
   /**

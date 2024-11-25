@@ -95,7 +95,7 @@ public class GreenhouseHandler extends Thread {
       server.putCommandControlPanel(command);
 
     } catch (IOException e) {
-      Logger.error("Socket reset");
+//      Logger.error("Socket reset");
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
