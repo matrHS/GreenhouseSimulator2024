@@ -86,9 +86,9 @@ public class GreenhouseNode implements SensorListener, NodeStateListener {
     for (String arg : args) {
       try {
         Integer.parseInt(arg);
+        valid = true;
       } catch (NumberFormatException e) {
         System.out.println("Invalid argument: " + arg);
-        valid = true;
       }
     }
     return valid;
