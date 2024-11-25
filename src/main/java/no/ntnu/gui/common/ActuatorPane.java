@@ -47,7 +47,7 @@ public class ActuatorPane extends TitledPane {
 
   private void addActuatorControls(ActuatorCollection actuators, Pane parent) {
     actuators.forEach(actuator ->
-        parent.getChildren().add(createActuatorGui(actuator))
+                          parent.getChildren().add(createActuatorGui(actuator))
     );
   }
 
@@ -68,9 +68,9 @@ public class ActuatorPane extends TitledPane {
       } else {
         actuator.turnOff();
       }
-        if (listener != null) {
-            listener.onActuatorChanged(actuator.getNodeId(), actuator.getId(), actuator.isOn());
-        }
+      if (listener != null) {
+        listener.onActuatorChanged(actuator.getNodeId(), actuator.getId(), actuator.isOn());
+      }
     });
     return checkbox;
   }

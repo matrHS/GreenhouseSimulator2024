@@ -8,25 +8,26 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import no.ntnu.greenhouse.Actuator;
-
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.tools.Logger;
 
+/**
+ * The communication channel for the control panel. It communicates with the server and sends
+ */
 public class ControlPanelCommunication extends Thread implements CommunicationChannel {
+  private final static String SERVER_HOST = "localhost";
   private final ControlPanelLogic logic;
+  private final int TCP_PORT = 1238;
   private ObjectInputStream inputStream;
   private ObjectOutputStream outputStream;
-
-  private final static String SERVER_HOST = "localhost";
-  private final int TCP_PORT = 1238;
   private Socket socket;
 
 
-    /**
-     * Constructor for the ControlPanelCommunication
-     *
-     * @param logic The logic for the control panel
-     */
+  /**
+   * Constructor for the ControlPanelCommunication.
+   *
+   * @param logic The logic for the control panel
+   */
   public ControlPanelCommunication(ControlPanelLogic logic) {
     this.logic = logic;
   }
@@ -68,26 +69,28 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   /**
    * Handles the readings from the sensor. The readings are split by comma and the type,
    * value and unit are extracted.
+   *
    * @param readings The readings from the sensor
    * @return A list of sensor readings
    */
   private List<SensorReading> handleReadings(String[] readings) {
     List<SensorReading> list = new ArrayList<>();
     if (readings.length > 3) {
-      for(int i = 2; i < readings.length; i++){
+      for (int i = 2; i < readings.length; i++) {
         String[] values = readings[i].split(",");
         String type = values[0].split("=")[1];
-        float value  = Float.parseFloat(values[1].split("=")[1]);
+        float value = Float.parseFloat(values[1].split("=")[1]);
         String unit = values[2].split("=")[1];
         unit = unit.replace("}", "");
         list.add(new SensorReading(type, value, unit));
       }
     }
-  return  list;
+    return list;
   }
 
   /**
    * Handles the payload from the server. The payload is split by comma and the type is extracted.
+   *
    * @param object The object from the server
    */
   private void handlePayload(Object object) {
@@ -95,9 +98,11 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     if (payload != null) {
       switch (payload[0]) {
         case "add":
-          SensorActuatorNodeInfo nodeInfo = new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
-          for (int i = 2 ; i < payload.length; i+=2) {
-            Actuator actuator = new Actuator(Integer.parseInt(payload[i+1]), payload[i], Integer.parseInt(payload[1]));
+          SensorActuatorNodeInfo nodeInfo = new SensorActuatorNodeInfo(
+              Integer.parseInt(payload[1]));
+          for (int i = 2; i < payload.length; i += 2) {
+            Actuator actuator = new Actuator(Integer.parseInt(payload[i + 1]), payload[i],
+                                             Integer.parseInt(payload[1]));
             nodeInfo.addActuator(actuator);
           }
           logic.onNodeAdded(nodeInfo);
@@ -107,15 +112,15 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
           break;
 
         case "data":
-          logic.onSensorData(Integer.parseInt(payload[1]),handleReadings(payload));
+          logic.onSensorData(Integer.parseInt(payload[1]), handleReadings(payload));
           break;
 
         case "state":
-          String[] IDs = payload[1].split(":");
-          int nodeId = Integer.parseInt(IDs[0]);
-          Actuator actuator = new Actuator(Integer.parseInt(IDs[1]), payload[2], nodeId);
+          String[] ids = payload[1].split(":");
+          int nodeId = Integer.parseInt(ids[0]);
+          Actuator actuator = new Actuator(Integer.parseInt(ids[1]), payload[2], nodeId);
           actuator.set(Boolean.parseBoolean(payload[3]));
-         logic.actuatorUpdated(nodeId, actuator);
+          logic.actuatorUpdated(nodeId, actuator);
           break;
 
         case "update":
@@ -130,27 +135,27 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   /**
    * Starts the thread for the control panel communication and listens for commands from the server.
    */
-  @Override@SuppressWarnings("InfiniteLoopStatement")
+  @Override
+  @SuppressWarnings("InfiniteLoopStatement")
   public void run() {
     this.instantiate();
-    while(true) {
+    while (true) {
       try {
         socket.setSoTimeout(4000);
-        Object object  = inputStream.readObject();
+        Object object = inputStream.readObject();
         Logger.info(object.toString());
-       if (object != null){
-         this.handlePayload(object);
-       }
-//       String[] payload = new String[3];
-//       payload[0] = "set";
-//       payload[1] = "53490";
-//       payload[2] = "true";
-//       outputStream.writeObject(payload);
-       //run = false;
-      }catch (SocketTimeoutException s) {
-      Logger.info("thread timeout restarting");
-      }
-      catch (IOException e) {
+        if (object != null) {
+          this.handlePayload(object);
+        }
+      //       String[] payload = new String[3];
+      //       payload[0] = "set";
+      //       payload[1] = "53490";
+      //       payload[2] = "true";
+      //       outputStream.writeObject(payload)
+      //       run = false;
+      } catch (SocketTimeoutException s) {
+        Logger.info("thread timeout restarting");
+      } catch (IOException e) {
         Logger.error("Thread timeout ");
       } catch (ClassNotFoundException e) {
         Logger.error("Failed to understand sent object");
