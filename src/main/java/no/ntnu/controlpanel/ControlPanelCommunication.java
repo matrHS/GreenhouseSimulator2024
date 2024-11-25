@@ -110,6 +110,11 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
           break;
 
         case "state":
+          String[] IDs = payload[1].split(":");
+          int nodeId = Integer.parseInt(IDs[0]);
+          Actuator actuator = new Actuator(Integer.parseInt(IDs[1]), payload[2], nodeId);
+          actuator.set(Boolean.parseBoolean(payload[3]));
+         logic.actuatorUpdated(nodeId, actuator);
           break;
 
         case "update":

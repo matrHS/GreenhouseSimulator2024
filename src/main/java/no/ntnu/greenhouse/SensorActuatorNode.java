@@ -300,6 +300,7 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     Actuator actuator = getActuator(actuatorId);
     if (actuator != null) {
       actuator.set(on);
+
     }
   }
 

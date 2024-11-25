@@ -68,6 +68,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
       System.out.println("Greenhouse initialized with default sensors " +
           "(1 temperature, 2 humidity, 1 window)");
     }
+    this.node.addStateListener(this);
 
     initiateCommunication();
     System.out.println("Greenhouse initialized and connected");
@@ -263,6 +264,11 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   @Override
   public void actuatorUpdated(int nodeId, Actuator actuator) {
-
+    String[] payload = new String[4];
+    payload[0] = "state";
+    payload[1] = socket.getLocalPort() + ":" + actuator.getId();
+    payload[2] = actuator.getType();
+    payload[3] = String.valueOf(actuator.isOn());
+    this.sendCommand(payload);
   }
 }
