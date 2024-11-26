@@ -132,6 +132,13 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     }
   }
 
+  public void closeCommunication() {
+    try {
+      socket.close();
+    } catch (IOException e) {
+      Logger.error("Failed to close communication");
+    }
+  }
   /**
    * Starts the thread for the control panel communication and listens for commands from the server.
    */

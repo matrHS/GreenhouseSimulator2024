@@ -52,7 +52,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   /**
    * Start the control panel application.
    *
-   * @param logic The logic for the control panel
+   * @param logic   The logic for the control panel
    * @param channel The communication channel
    */
   public static void startApp(ControlPanelLogic logic, CommunicationChannel channel) {
@@ -232,9 +232,8 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   /**
    * Get the stored actuator.
    *
-   * @param nodeId   The node ID
+   * @param nodeId     The node ID
    * @param actuatorId The actuator ID
-   *
    * @return The stored actuator
    */
   private Actuator getStoredActuator(int nodeId, int actuatorId) {
@@ -334,5 +333,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   @Override
   public void onActuatorChanged(int nodeId, int actuatorId, boolean state) {
     channel.sendActuatorChange(nodeId, actuatorId, state);
+  }
+
+  @Override
+  public void stop() {
+    // This code is reached only after the GUI-window is closed
+    Logger.info("Exiting the control panel application");
+     channel.closeCommunication();
   }
 }

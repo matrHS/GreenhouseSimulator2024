@@ -45,9 +45,7 @@ public class ControlPanelStarter {
     ControlPanelLogic logic = new ControlPanelLogic();
     CommunicationChannel channel = initiateCommunication(logic, fake);
     ControlPanelApplication.startApp(logic, channel);
-    // This code is reached only after the GUI-window is closed
-    Logger.info("Exiting the control panel application");
-    stopCommunication();
+
   }
 
   private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) {
@@ -61,9 +59,6 @@ public class ControlPanelStarter {
   }
 
   private CommunicationChannel initiateSocketCommunication(ControlPanelLogic logic) {
-    // TODO - here you initiate TCP/UDP socket communication
-    // You communication class(es) may want to get reference to the logic and call necessary
-    // logic methods when events happen (for example, when sensor data is received)
     return new ControlPanelCommunication(logic);
   }
 
@@ -98,9 +93,5 @@ public class ControlPanelStarter {
     spawner.advertiseSensorData("4;temperature=25.4 °C,temperature=27.0 °C,humidity=82 %",
                                 startDelay + 16);
     return spawner;
-  }
-
-  private void stopCommunication() {
-    // TODO - here you stop the TCP/UDP socket communication
   }
 }

@@ -129,8 +129,6 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
       this.objectOutputStream.writeObject(payload);
     } catch (IOException e) {
       Logger.error("Failed to connect to server");
-      // TODO: Replace with logger
-      System.out.println(e);
     }
   }
 
