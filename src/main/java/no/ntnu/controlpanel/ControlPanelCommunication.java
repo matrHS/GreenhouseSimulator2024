@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.greenhouse.Actuator;
 
 import no.ntnu.greenhouse.SensorReading;
@@ -16,10 +17,10 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   private final ControlPanelLogic logic;
   private ObjectInputStream inputStream;
   private ObjectOutputStream outputStream;
-
   private final static String SERVER_HOST = "localhost";
   private final int TCP_PORT = 1238;
   private Socket socket;
+  private LinkedBlockingQueue<String[]> commandQueue;
 
 
     /**
@@ -43,6 +44,8 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       Logger.error("Failed to send actuator change");
     }
   }
+
+
 
   @Override
   public boolean open() {
@@ -96,8 +99,11 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       switch (payload[0]) {
         case "add":
           SensorActuatorNodeInfo nodeInfo = new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
-          for (int i = 2 ; i < payload.length; i+=2) {
-            Actuator actuator = new Actuator(Integer.parseInt(payload[i+1]), payload[i], Integer.parseInt(payload[1]));
+          for (int i = 2 ; i < payload.length; i+=3) {
+            Actuator actuator = new Actuator(Integer.parseInt(payload[i+1]), payload[i],
+                Integer.parseInt(payload[1]));
+            Boolean state = Boolean.parseBoolean(payload[i+2]);
+            actuator.set(state);
             nodeInfo.addActuator(actuator);
           }
           logic.onNodeAdded(nodeInfo);
@@ -126,7 +132,15 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       }
     }
   }
-
+  private void sendCommandIfExists(){
+    while(this.commandQueue.peek() != null){
+      try {
+        outputStream.writeObject(commandQueue.poll());
+      } catch (IOException e) {
+        Logger.info("Failed to write to the server");
+      }
+    }
+  }
   /**
    * Starts the thread for the control panel communication and listens for commands from the server.
    */
@@ -135,20 +149,13 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     this.instantiate();
     while(true) {
       try {
-        socket.setSoTimeout(4000);
+        socket.setSoTimeout(100);
         Object object  = inputStream.readObject();
-        Logger.info(object.toString());
        if (object != null){
          this.handlePayload(object);
        }
-//       String[] payload = new String[3];
-//       payload[0] = "set";
-//       payload[1] = "53490";
-//       payload[2] = "true";
-//       outputStream.writeObject(payload);
-       //run = false;
       }catch (SocketTimeoutException s) {
-      Logger.info("thread timeout restarting");
+      sendCommandIfExists();
       }
       catch (IOException e) {
         Logger.error("Thread timeout ");
@@ -157,4 +164,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       }
     }
   }
+
+  public void setCommandQueue(LinkedBlockingQueue<String[]> commandQueue) {
+    this.commandQueue = commandQueue;
+  }
+
 }

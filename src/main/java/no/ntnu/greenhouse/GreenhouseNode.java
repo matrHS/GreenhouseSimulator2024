@@ -141,13 +141,14 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
    * @return
    */
   private String[] nodeInfoForAddingNodesOnCPanel(){
-    String[] nodeInfo = new String[2 + node.getActuators().size()*2];
+    String[] nodeInfo = new String[2 + node.getActuators().size()*3];
     nodeInfo[1] = String.valueOf(socket.getLocalPort());
     int index = 2;
     for (Actuator actuator : this.node.getActuators()) {
       nodeInfo[index] = actuator.getType();
       nodeInfo[index + 1] = String.valueOf(actuator.getId());
-      index = index +2;
+      nodeInfo[index + 2] = String.valueOf(actuator.isOn());
+      index = index +3;
     }
 
     return nodeInfo;

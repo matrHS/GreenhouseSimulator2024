@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.HPos;
@@ -61,6 +62,8 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private final Map<Integer, SensorActuatorNodeInfo> nodeInfos = new HashMap<>();
   private final Map<Integer, Tab> nodeTabs = new HashMap<>();
 
+  private LinkedBlockingQueue<String[]> commandQueue;
+
 
   public static void startApp(ControlPanelLogic logic, CommunicationChannel channel) {
     if (logic == null) {
@@ -78,6 +81,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       throw new IllegalStateException(
           "No communication channel. See the README on how to use fake event spawner!");
     }
+    commandQueue = new LinkedBlockingQueue<>();
     controller= new MainGuiController(this);
     this.stage = stage;
     this.stage.setTitle("Control Panel");
@@ -90,6 +94,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
 
     logic.addListener(this);
     logic.setCommunicationChannelListener(this);
+    channel.setCommandQueue(commandQueue);
     channel.start();
   }
 
@@ -261,8 +266,22 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     Platform.runLater(Platform::exit);
   }
 
+  private void putOnCommandQueue(String[] payload){
+    try {
+     commandQueue.put(payload);
+    } catch (InterruptedException e) {
+      Logger.info("failed to put command on queue.");
+    }
+  }
+
   @Override
   public void onActuatorChanged(int nodeId, int actuatorId, boolean state) {
-    channel.sendActuatorChange(nodeId, actuatorId, state);
+    String[] payload = new String[3];
+    payload[0] = "set";
+    payload[1] = nodeId + ":" + actuatorId;
+    payload[2] = Boolean.toString(state);
+    Platform.runLater(()->{
+      putOnCommandQueue(payload);
+    });
   }
 }

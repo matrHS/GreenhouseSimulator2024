@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.listeners.controlpanel.ActuatorChangedListener;
+import no.ntnu.tools.Logger;
 
 /**
  * A section of the GUI representing a list of actuators. Can be used both on the sensor/actuator
@@ -70,6 +71,7 @@ public class ActuatorPane extends TitledPane {
       }
         if (listener != null) {
             listener.onActuatorChanged(actuator.getNodeId(), actuator.getId(), actuator.isOn());
+          //Logger.info("changing actuator " + actuator.getId() + " on node " + actuator.getNodeId());
         }
     });
     return checkbox;

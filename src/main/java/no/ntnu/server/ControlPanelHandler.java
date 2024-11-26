@@ -11,6 +11,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
 
 public class ControlPanelHandler extends Thread{
@@ -53,7 +54,7 @@ public class ControlPanelHandler extends Thread{
   public void run() {
       while (true) {
         try{
-        socket.setSoTimeout(1000);
+        socket.setSoTimeout(Config.timeout);
         String[] commands = (String[]) inputStream.readObject();
           int Id;
           if(commands[0].equals("set")){
