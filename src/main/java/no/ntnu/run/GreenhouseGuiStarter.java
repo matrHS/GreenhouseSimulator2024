@@ -1,12 +1,13 @@
 package no.ntnu.run;
 
-import no.ntnu.gui.greenhouse.GreenhouseApplication;
+
 import no.ntnu.tools.Logger;
 
 /**
  * Starter for GUI version of the greenhouse simulator.
  */
 public class GreenhouseGuiStarter {
+
   /**
    * Entrypoint gor the Greenhouse GUI application.
    *
@@ -20,6 +21,6 @@ public class GreenhouseGuiStarter {
       fake = true;
       Logger.info("Using FAKE events");
     }
-    GreenhouseApplication.startApp(fake);
+    //MainGui.mainApp(fake);
   }
 }

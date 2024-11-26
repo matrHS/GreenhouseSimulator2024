@@ -14,6 +14,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.ActuatorCollection;
+import no.ntnu.listeners.controlpanel.ActuatorChangedListener;
+import no.ntnu.tools.Logger;
 
 /**
  * A section of the GUI representing a list of actuators. Can be used both on the sensor/actuator
@@ -22,6 +24,7 @@ import no.ntnu.greenhouse.ActuatorCollection;
 public class ActuatorPane extends TitledPane {
   private final Map<Actuator, SimpleStringProperty> actuatorValue = new HashMap<>();
   private final Map<Actuator, SimpleBooleanProperty> actuatorActive = new HashMap<>();
+  ActuatorChangedListener listener;
 
   /**
    * Create an actuator pane.
@@ -38,9 +41,14 @@ public class ActuatorPane extends TitledPane {
     GuiTools.stretchVertically(this);
   }
 
+  public ActuatorPane(ActuatorCollection actuators, ActuatorChangedListener listener) {
+    this(actuators);
+    this.listener = listener;
+  }
+
   private void addActuatorControls(ActuatorCollection actuators, Pane parent) {
     actuators.forEach(actuator ->
-        parent.getChildren().add(createActuatorGui(actuator))
+                          parent.getChildren().add(createActuatorGui(actuator))
     );
   }
 
@@ -61,6 +69,11 @@ public class ActuatorPane extends TitledPane {
       } else {
         actuator.turnOff();
       }
+
+        if (listener != null) {
+            listener.onActuatorChanged(actuator.getNodeId(), actuator.getId(), actuator.isOn());
+          //Logger.info("changing actuator " + actuator.getId() + " on node " + actuator.getNodeId());
+        }
     });
     return checkbox;
   }

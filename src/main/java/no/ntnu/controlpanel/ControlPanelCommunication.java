@@ -1,0 +1,188 @@
+package no.ntnu.controlpanel;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.SensorReading;
+import no.ntnu.tools.Config;
+import no.ntnu.tools.Logger;
+
+/**
+ * The communication channel for the control panel. It communicates with the server and sends
+ */
+public class ControlPanelCommunication extends Thread implements CommunicationChannel {
+  private final static String SERVER_HOST = "localhost";
+  private final ControlPanelLogic logic;
+  private final int TCP_PORT = 1238;
+  private ObjectInputStream inputStream;
+  private ObjectOutputStream outputStream;
+  private Socket socket;
+  private LinkedBlockingQueue<String[]> commandQueue;
+
+
+  /**
+   * Constructor for the ControlPanelCommunication.
+   *
+   * @param logic The logic for the control panel
+   */
+  public ControlPanelCommunication(ControlPanelLogic logic) {
+    this.logic = logic;
+  }
+
+  @Override
+  public void sendActuatorChange(int nodeId, int actuatorId, boolean isOn) {
+    String[] payload = new String[3];
+    payload[0] = "set";
+    payload[1] = nodeId + ":" + actuatorId;
+    payload[2] = Boolean.toString(isOn);
+    try {
+      outputStream.writeObject(payload);
+    } catch (IOException e) {
+      Logger.error("Failed to send actuator change");
+    }
+  }
+
+
+
+  @Override
+  public boolean open() {
+    return false;
+  }
+
+  /**
+   * Opens a communication socket with the remote server and sets up the input and output streams.
+   */
+  private void instantiate() {
+    try {
+      this.socket = new Socket(SERVER_HOST, TCP_PORT);
+      this.inputStream = new ObjectInputStream(socket.getInputStream());
+      this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+      this.outputStream.writeObject("cp");
+      logic.setCommunicationChannel(this);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+  }
+
+  /**
+   * Handles the readings from the sensor. The readings are split by comma and the type,
+   * value and unit are extracted.
+   *
+   * @param readings The readings from the sensor
+   * @return A list of sensor readings
+   */
+  private List<SensorReading> handleReadings(String[] readings) {
+    List<SensorReading> list = new ArrayList<>();
+    if (readings.length > 3) {
+      for (int i = 2; i < readings.length; i++) {
+        String[] values = readings[i].split(",");
+        String type = values[0].split("=")[1];
+        float value = Float.parseFloat(values[1].split("=")[1]);
+        String unit = values[2].split("=")[1];
+        unit = unit.replace("}", "");
+        list.add(new SensorReading(type, value, unit));
+      }
+    }
+    return list;
+  }
+
+  /**
+   * Handles the payload from the server. The payload is split by comma and the type is extracted.
+   *
+   * @param object The object from the server
+   */
+  private void handlePayload(Object object) {
+    String[] payload = (object instanceof String[]) ? (String[]) object : null;
+    if (payload != null) {
+      switch (payload[0]) {
+        case "add":
+
+          SensorActuatorNodeInfo nodeInfo = new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
+          for (int i = 2 ; i < payload.length; i+=3) {
+            Actuator actuator = new Actuator(Integer.parseInt(payload[i+1]), payload[i],
+                Integer.parseInt(payload[1]));
+            Boolean state = Boolean.parseBoolean(payload[i+2]);
+            actuator.set(state);
+
+            nodeInfo.addActuator(actuator);
+          }
+          logic.onNodeAdded(nodeInfo);
+          break;
+
+        case "remove":
+          break;
+
+        case "data":
+          logic.onSensorData(Integer.parseInt(payload[1]), handleReadings(payload));
+          break;
+
+        case "state":
+          String[] ids = payload[1].split(":");
+          int nodeId = Integer.parseInt(ids[0]);
+          Actuator actuator = new Actuator(Integer.parseInt(ids[1]), payload[2], nodeId);
+          actuator.set(Boolean.parseBoolean(payload[3]));
+          logic.actuatorUpdated(nodeId, actuator);
+          break;
+
+        case "update":
+          break;
+
+        default:
+          break;
+      }
+    }
+  }
+  private void sendCommandIfExists(){
+    while(this.commandQueue.peek() != null) {
+      try {
+        outputStream.writeObject(commandQueue.poll());
+      } catch (IOException e) {
+        Logger.info("Failed to write to the server");
+      }
+    }
+  }
+
+  public void closeCommunication() {
+    try {
+      socket.close();
+    } catch (IOException e) {
+      Logger.error("Failed to close communication");
+
+    }
+  }
+  /**
+   * Starts the thread for the control panel communication and listens for commands from the server.
+   */
+  @Override
+  public void run() {
+    this.instantiate();
+    while (!socket.isClosed()) {
+      try {
+        socket.setSoTimeout(Config.timeout);
+        Object object  = inputStream.readObject();
+       if (object != null){
+         this.handlePayload(object);
+       }
+      }catch (SocketTimeoutException s) {
+      sendCommandIfExists();
+      }
+      catch (IOException e) {
+        Logger.error("Thread timeout ");
+      } catch (ClassNotFoundException e) {
+        Logger.error("Failed to understand sent object");
+      }
+    }
+  }
+
+  public void setCommandQueue(LinkedBlockingQueue<String[]> commandQueue) {
+    this.commandQueue = commandQueue;
+  }
+
+}

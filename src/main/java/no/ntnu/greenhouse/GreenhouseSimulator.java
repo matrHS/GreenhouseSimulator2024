@@ -2,6 +2,7 @@ package no.ntnu.greenhouse;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,13 +16,14 @@ import no.ntnu.tools.Logger;
  */
 public class GreenhouseSimulator {
   private final static String SERVER_HOST = "localhost";
-  private final static int TCP_PORT = 1236;
-  private ObjectInputStream objectInputStream;
-  private Socket socket;
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
-
   private final List<PeriodicSwitch> periodicSwitches = new LinkedList<>();
   private final boolean fake;
+  private int TCP_PORT = 1238;
+  private ObjectInputStream objectInputStream;
+  private ObjectOutputStream objectOutputStream;
+  private Socket socket;
+  private GreenhouseNode greenhouseNode;
 
   /**
    * Create a greenhouse simulator.
@@ -33,17 +35,24 @@ public class GreenhouseSimulator {
     this.fake = fake;
   }
 
+  public GreenhouseSimulator(int tcp) {
+    TCP_PORT = tcp;
+    this.fake = false;
+  }
+
   /**
    * Initialise the greenhouse but don't start the simulation just yet.
    */
   public void initialize() {
-    createNode(1, 2, 1, 0, 0);
-    createNode(1, 0, 0, 2, 1);
-    createNode(2, 0, 0, 0, 0);
+    this.greenhouseNode = new GreenhouseNode(TCP_PORT);
+    this.greenhouseNode.initialize(new String[] {"1", "2", "1", "0", "0"});
+
     Logger.info("Greenhouse initialized");
   }
 
+  // TODO: Refactor into separate NODE class. Separate all node functionality to its own class
   private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
+    initiateCommunication();
     SensorActuatorNode node = DeviceFactory.createNode(
         temperature, humidity, windows, fans, heaters);
     nodes.put(node.getId(), node);
@@ -53,13 +62,8 @@ public class GreenhouseSimulator {
    * Start a simulation of a greenhouse - all the sensor and actuator nodes inside it.
    */
   public void start() {
-    initiateCommunication();
-    for (SensorActuatorNode node : nodes.values()) {
-      node.start();
-    }
-    for (PeriodicSwitch periodicSwitch : periodicSwitches) {
-      periodicSwitch.start();
-    }
+
+    this.greenhouseNode.start();
 
     Logger.info("Simulator started");
   }
@@ -72,13 +76,20 @@ public class GreenhouseSimulator {
     }
   }
 
+  /**
+   * Initializes communication between a node and the server.
+   * Each node is defined as a greenhouse consisting of multiple sensors.
+   */
   private void initiateRealCommunication() {
     // TODO - here you can set up the TCP or UDP communication
     try {
-      this.socket = new Socket(this.SERVER_HOST, this.TCP_PORT);
+      this.socket = new Socket(SERVER_HOST, this.TCP_PORT);
       objectInputStream = new ObjectInputStream(socket.getInputStream());
 
       System.out.println("Connection Established");
+      objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+      objectOutputStream.writeObject("Hello from the client");
+      objectOutputStream.writeObject("Hello from the client again");
     } catch (IOException e) {
       // TODO: Replace with logger
       System.out.println(e);
@@ -107,6 +118,11 @@ public class GreenhouseSimulator {
       }
     } else {
       // TODO - here you stop the TCP/UDP communication
+      try {
+        this.socket.close();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -119,5 +135,9 @@ public class GreenhouseSimulator {
     for (SensorActuatorNode node : nodes.values()) {
       node.addStateListener(listener);
     }
+  }
+
+  public Map<Integer, SensorActuatorNode> getNodes() {
+    return nodes;
   }
 }

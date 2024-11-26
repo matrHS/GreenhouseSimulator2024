@@ -13,6 +13,7 @@ public class SensorActuatorNodeInfo {
   private final ActuatorCollection actuators = new ActuatorCollection();
 
   public SensorActuatorNodeInfo(int nodeId) {
+
     this.nodeId = nodeId;
   }
 
@@ -45,6 +46,7 @@ public class SensorActuatorNodeInfo {
    * @return The actuator or null if none found
    */
   public Actuator getActuator(int actuatorId) {
+
     return actuators.get(actuatorId);
   }
 }
