@@ -6,7 +6,7 @@ target/
 ### IntelliJ IDEA ###
 .idea/
 *.iml
-
+docs
 ### Eclipse ###
 .apt_generated
 .classpath
