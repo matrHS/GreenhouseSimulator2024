@@ -1,5 +1,7 @@
 package no.ntnu.gui.controlpanel;
 
+import static javafx.application.Platform.exit;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -339,6 +341,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   public void stop() {
     // This code is reached only after the GUI-window is closed
     Logger.info("Exiting the control panel application");
-     channel.closeCommunication();
+    channel.closeCommunication();
+    exit();
   }
 }

@@ -146,7 +146,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   @SuppressWarnings("InfiniteLoopStatement")
   public void run() {
     this.instantiate();
-    while (true) {
+    while (!socket.isClosed()) {
       try {
         socket.setSoTimeout(4000);
         Object object = inputStream.readObject();

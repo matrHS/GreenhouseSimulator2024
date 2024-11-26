@@ -50,7 +50,7 @@ public class ControlPanelHandler extends Thread {
   @Override
   @SuppressWarnings("InfiniteLoopStatement")
   public void run() {
-    while (true) {
+    while (!socket.isClosed()) {
       try {
         socket.setSoTimeout(1000);
         String[] commands = (String[]) inputStream.readObject();

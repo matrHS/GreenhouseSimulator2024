@@ -45,7 +45,6 @@ public class ControlPanelStarter {
     ControlPanelLogic logic = new ControlPanelLogic();
     CommunicationChannel channel = initiateCommunication(logic, fake);
     ControlPanelApplication.startApp(logic, channel);
-
   }
 
   private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) {
