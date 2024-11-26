@@ -68,14 +68,7 @@ public class ControlPanelHandler extends Thread {
       } catch (SocketTimeoutException s) {
         processNextQueuedElement();
       } catch (IOException e) {
-        try {
-          Logger.info("Attempting to close control panel socket with port " + socket.getPort());
-          socket.close();
-          server.controlPanels.remove(socket.getPort());
-          Logger.info("Control panel socket with port " + socket.getPort() + " closed");
-        } catch (IOException ex) {
-          throw new RuntimeException(ex);
-        }
+        server.closeSocket(server.getCPMap(),this.socket);
       } catch (ClassNotFoundException e) {
         Logger.error(e.toString());
       }

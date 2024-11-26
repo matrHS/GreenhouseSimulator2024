@@ -65,6 +65,24 @@ public class Server {
     }
   }
 
+  public void closeSocket(HashMap map, Socket socket){
+    try {
+      Logger.info("Attempting to close greenouse socket with port " + socket.getPort());
+      socket.close();
+      map.remove(socket.getPort());
+      Logger.info("Greenouse socket with port " + socket.getPort() + " closed");
+    } catch (IOException ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  public HashMap getCPMap(){
+    return this.controlPanels;
+  }
+
+  public HashMap getNodeMap(){
+    return this.greenHouseSockets;
+  }
   /**
    * Run the server, and handle the client.
    */

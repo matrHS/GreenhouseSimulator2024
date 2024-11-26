@@ -10,6 +10,7 @@ import java.util.Map;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
+import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
 
 /**
@@ -120,7 +121,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     // TODO - here you can set up the TCP or UDP communication
     try {
       this.socket = new Socket(SERVER_HOST, this.TCP_PORT);
-      socket.setSoTimeout(1000);
+      socket.setSoTimeout(Config.timeout);
       this.objectInputStream = new ObjectInputStream(socket.getInputStream());
       this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
       String[] payload = nodeInfoForAddingNodesOnCPanel();
@@ -231,7 +232,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   private void listenForCommands() {
     try {
-      socket.setSoTimeout(4000);
+      socket.setSoTimeout(Config.timeout);
       processCommand();
     } catch (IOException e) {
       Logger.error("failed to read from server");

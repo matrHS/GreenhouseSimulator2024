@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.SensorReading;
+import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
 
 /**
@@ -164,7 +165,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     this.instantiate();
     while (!socket.isClosed()) {
       try {
-        socket.setSoTimeout(100);
+        socket.setSoTimeout(Config.timeout);
         Object object  = inputStream.readObject();
        if (object != null){
          this.handlePayload(object);
