@@ -1,7 +1,5 @@
 package no.ntnu.gui.greenhouse;
 
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,9 +8,19 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 
+/**
+ * A class that contains default values for the GUI.
+ */
 public class Default {
 
-  public static VBox setHeader(MainGuiController controller) throws Exception{
+  /**
+   * Set the header of the GUI.
+   *
+   * @param controller The controller of the main GUI.
+   * @return The header of the GUI.
+   * @throws Exception If the banner could not be found.
+   */
+  public static VBox setHeader(MainGuiController controller) throws Exception {
     Image banner = null;
     VBox topPane = new VBox();
     VBox bannerPane = new VBox();
@@ -30,10 +38,16 @@ public class Default {
     return topPane;
   }
 
-  public static Scene defaultScene(Parent root){
+  /**
+   * Create a default scene.
+   *
+   * @param root The root of the scene.
+   * @return The default scene.
+   */
+  public static Scene defaultScene(Parent root) {
     Screen screen = Screen.getPrimary();
     Rectangle2D bounds = screen.getVisualBounds();
     Scene scene = new Scene(root, bounds.getMinX(), bounds.getMinY());
-    return  scene;
+    return scene;
   }
 }

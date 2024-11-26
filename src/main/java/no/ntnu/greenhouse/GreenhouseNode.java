@@ -1,13 +1,9 @@
 package no.ntnu.greenhouse;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,34 +12,36 @@ import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
 import no.ntnu.tools.Logger;
 
+/**
+ * The GreenhouseNode class is responsible for handling the communication between the greenhouse and
+ * the server. It listens for commands from the server and sends sensor readings to the server.
+ */
 public class GreenhouseNode implements SensorListener, NodeStateListener, ActuatorListener {
   private final static String SERVER_HOST = "localhost";
+  private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
   private int TCP_PORT = 1238;
   private ObjectInputStream objectInputStream;
   private ObjectOutputStream objectOutputStream;
   private Socket socket;
-
-  private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
   private SensorActuatorNode node;
 
   private boolean allowSendReading;
 
 
-
+  /**
+   * Create a greenhouse node that should connect to specified TCP port of server.
+   *
+   * @param TCP_PORT the TCP port of the server
+   */
+  public GreenhouseNode(int TCP_PORT) {
+    this.TCP_PORT = TCP_PORT;
+  }
 
   /**
    * Start the greenhouse.
    */
   public void start() {
     node.start();
-  }
-
-  /**
-   * Create a greenhouse node that should connect to specified TCP port of server.
-   * @param TCP_PORT
-   */
-  public GreenhouseNode(int TCP_PORT) {
-    this.TCP_PORT = TCP_PORT;
   }
 
   /**
@@ -65,8 +63,8 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
       createNode(temperature, humidity, windows, fans, heaters);
     } else {
       createNode(1, 2, 1, 0, 0);
-      System.out.println("Greenhouse initialized with default sensors " +
-          "(1 temperature, 2 humidity, 1 window)");
+      System.out.println("Greenhouse initialized with default sensors "
+                         + "(1 temperature, 2 humidity, 1 window)");
     }
     this.node.addStateListener(this);
 
@@ -101,10 +99,10 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
    * Create a greenhouse node with the given properties.
    *
    * @param temperature temperature sensor count
-   * @param humidity humidity sensor count
-   * @param windows window actuator count
-   * @param fans fan actuator count
-   * @param heaters heater actuator count
+   * @param humidity    humidity sensor count
+   * @param windows     window actuator count
+   * @param fans        fan actuator count
+   * @param heaters     heater actuator count
    */
   private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
     this.node = DeviceFactory.createNode(
@@ -130,29 +128,33 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
       Logger.info("sending node info to server");
       this.objectOutputStream.writeObject(payload);
     } catch (IOException e) {
-      // TODO: Replace with logger
-      System.out.println(e);
+      Logger.error("Failed to connect to server");
     }
   }
 
   /**
    * Returns the node information in the format: "empty-command", "nodeID", "actuatorType",
    * "actuatorID", "actuatorType", "actuatorID", ...
-   * @return
+   *
+   * @return the node information
    */
   private String[] nodeInfoForAddingNodesOnCPanel(){
     String[] nodeInfo = new String[2 + node.getActuators().size()*3];
+
     nodeInfo[1] = String.valueOf(socket.getLocalPort());
     int index = 2;
     for (Actuator actuator : this.node.getActuators()) {
       nodeInfo[index] = actuator.getType();
       nodeInfo[index + 1] = String.valueOf(actuator.getId());
+
       nodeInfo[index + 2] = String.valueOf(actuator.isOn());
       index = index +3;
+
     }
 
     return nodeInfo;
   }
+
   /**
    * Processes the command received from the server.
    */
@@ -194,7 +196,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   private void sendCommand(String[] command) {
     try {
 
-        objectOutputStream.writeObject(command);
+      objectOutputStream.writeObject(command);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -227,7 +229,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     }
   }
 
-  private void listenForCommands(){
+  private void listenForCommands() {
     try {
       socket.setSoTimeout(4000);
       processCommand();
@@ -239,7 +241,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   @Override
   public void sensorsUpdated(List<Sensor> sensors) {
     listenForCommands();
-    if(allowSendReading) {
+    if (allowSendReading) {
 
       String[] command = new String[sensors.size() + 2];
       command[0] = "data";

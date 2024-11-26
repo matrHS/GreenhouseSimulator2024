@@ -132,9 +132,9 @@ public class Actuator {
   @Override
   public String toString() {
     return "Actuator{"
-        + "type='" + type + '\''
-        + ", on=" + on
-        + '}';
+           + "type='" + type + '\''
+           + ", on=" + on
+           + '}';
   }
 
   /**
@@ -160,8 +160,7 @@ public class Actuator {
   /**
    * Get the ID of the actuator.
    *
-   * @return An ID which is guaranteed to be unique at a node level, not necessarily unique at
-   *     the whole greenhouse-network level.
+   * @return An ID which is guaranteed to be unique at a node level.
    */
   public int getId() {
     return id;

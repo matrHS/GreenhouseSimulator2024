@@ -1,7 +1,6 @@
 package no.ntnu.run;
 
 
-import no.ntnu.gui.greenhouse.MainGui;
 import no.ntnu.tools.Logger;
 
 /**

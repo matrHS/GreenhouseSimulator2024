@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
-import no.ntnu.server.Server;
 import no.ntnu.tools.Logger;
 
 /**
@@ -17,14 +16,13 @@ import no.ntnu.tools.Logger;
  */
 public class GreenhouseSimulator {
   private final static String SERVER_HOST = "localhost";
-  private  int TCP_PORT = 1238;
+  private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
+  private final List<PeriodicSwitch> periodicSwitches = new LinkedList<>();
+  private final boolean fake;
+  private int TCP_PORT = 1238;
   private ObjectInputStream objectInputStream;
   private ObjectOutputStream objectOutputStream;
   private Socket socket;
-  private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
-
-  private final List<PeriodicSwitch> periodicSwitches = new LinkedList<>();
-  private final boolean fake;
   private GreenhouseNode greenhouseNode;
 
   /**
@@ -36,9 +34,10 @@ public class GreenhouseSimulator {
   public GreenhouseSimulator(boolean fake) {
     this.fake = fake;
   }
+
   public GreenhouseSimulator(int tcp) {
-   TCP_PORT = tcp;
-   this.fake = false;
+    TCP_PORT = tcp;
+    this.fake = false;
   }
 
   /**
@@ -46,7 +45,7 @@ public class GreenhouseSimulator {
    */
   public void initialize() {
     this.greenhouseNode = new GreenhouseNode(TCP_PORT);
-    this.greenhouseNode.initialize(new String[]{"1", "2", "1", "0", "0"});
+    this.greenhouseNode.initialize(new String[] {"1", "2", "1", "0", "0"});
 
     Logger.info("Greenhouse initialized");
   }
@@ -85,7 +84,7 @@ public class GreenhouseSimulator {
     // TODO - here you can set up the TCP or UDP communication
     try {
       this.socket = new Socket(SERVER_HOST, this.TCP_PORT);
-       objectInputStream = new ObjectInputStream(socket.getInputStream());
+      objectInputStream = new ObjectInputStream(socket.getInputStream());
 
       System.out.println("Connection Established");
       objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
