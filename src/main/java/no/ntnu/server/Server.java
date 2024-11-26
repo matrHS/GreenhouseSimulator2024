@@ -13,8 +13,8 @@ import no.ntnu.tools.Logger;
  */
 public class Server {
   static final int TCP_PORT = 1238;
-  private HashMap<Integer, GreenhouseHandler> greenHouseSockets;
-  private HashMap<Integer, ControlPanelHandler> controlPanels;
+  protected HashMap<Integer, GreenhouseHandler> greenHouseSockets;
+  protected HashMap<Integer, ControlPanelHandler> controlPanels;
   private ServerSocket serverSocket;
 
   private HashMap<String, String[]> latestReading;

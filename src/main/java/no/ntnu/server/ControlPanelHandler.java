@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import no.ntnu.tools.Logger;
 
 /**
  * The control panel handler class. This class is responsible for handling the communication between
@@ -65,9 +66,16 @@ public class ControlPanelHandler extends Thread {
       } catch (SocketTimeoutException s) {
         processNextQueuedElement();
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        try {
+          Logger.info("Attempting to close control panel socket with port " + socket.getPort());
+          socket.close();
+          server.controlPanels.remove(socket.getPort());
+          Logger.info("Control panel socket with port " + socket.getPort() + " closed");
+        } catch (IOException ex) {
+          throw new RuntimeException(ex);
+        }
       } catch (ClassNotFoundException e) {
-        throw new RuntimeException(e);
+        Logger.error(e.toString());
       }
     }
   }
