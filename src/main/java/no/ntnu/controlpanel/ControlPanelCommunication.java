@@ -136,6 +136,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
 
         case "update":
           break;
+        case "aggregate":
+          logic.onAggregateSensorData(Integer.parseInt(payload[1]), handleReadings(payload));
+          break;
 
         default:
           break;

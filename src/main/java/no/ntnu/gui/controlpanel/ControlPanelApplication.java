@@ -18,7 +18,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -46,6 +45,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private static ControlPanelLogic logic;
   private static ControlPanelCommunication channel;
   private final Map<Integer, SensorPane> sensorPanes = new HashMap<>();
+  private final Map<Integer, SensorPane> aggregatePanes = new HashMap<>();
   private final Map<Integer, ActuatorPane> actuatorPanes = new HashMap<>();
   private final Map<Integer, SensorActuatorNodeInfo> nodeInfos = new HashMap<>();
   private final Map<Integer, Tab> nodeTabs = new HashMap<>();
@@ -90,8 +90,8 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    *
    * @return The empty sensor pane
    */
-  private static SensorPane createEmptySensorPane() {
-    return new SensorPane();
+  private static SensorPane createEmptySensorPane(String title) {
+    return new SensorPane(title);
   }
 
   /**
@@ -268,6 +268,17 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     }
   }
 
+  @Override
+  public void onAggregateSensorData(int nodeId, List<SensorReading> sensors) {
+    Logger.info("1 minute aggregate data from greenhouse " + nodeId);
+    SensorPane aggregatePane = aggregatePanes.get(nodeId);
+    if (aggregatePane != null) {
+      aggregatePane.update(sensors);
+    } else {
+      Logger.error("No sensor section for greenhouse " + nodeId);
+    }
+  }
+
   /**
    * Get the stored actuator.
    *
@@ -344,11 +355,13 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    */
   private Tab createNodeTab(SensorActuatorNodeInfo nodeInfo) {
     Tab tab = new Tab("Node " + nodeInfo.getId());
-    SensorPane sensorPane = createEmptySensorPane();
+    SensorPane sensorPane = createEmptySensorPane("Sensors");
     sensorPanes.put(nodeInfo.getId(), sensorPane);
     ActuatorPane actuatorPane = new ActuatorPane(nodeInfo.getActuators(), this);
     actuatorPanes.put(nodeInfo.getId(), actuatorPane);
-    tab.setContent(new VBox(sensorPane, actuatorPane));
+    SensorPane aggregatePane = new SensorPane("1 minute average");
+    aggregatePanes.put(nodeInfo.getId(), aggregatePane);
+    tab.setContent(new VBox(sensorPane, actuatorPane, aggregatePane));
     nodeTabs.put(nodeInfo.getId(), tab);
     return tab;
   }

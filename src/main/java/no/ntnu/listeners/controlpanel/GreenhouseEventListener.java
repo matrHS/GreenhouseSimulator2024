@@ -43,4 +43,12 @@ public interface GreenhouseEventListener {
    * @param isOn       When true, actuator is on; off when false.
    */
   void onActuatorStateChanged(int nodeId, int actuatorId, boolean isOn);
+
+  /**
+   * This event is fired when an aggregate sensor data is received from a node.
+   *
+   * @param nodeId  ID of the node
+   * @param sensors List of all current sensor values
+   */
+  void onAggregateSensorData(int nodeId, List<SensorReading> sensors);
 }

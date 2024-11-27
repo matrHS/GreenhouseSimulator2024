@@ -24,16 +24,16 @@ public class SensorPane extends TitledPane {
    *
    * @param sensors The sensor data to be displayed on the pane.
    */
-  public SensorPane(Iterable<SensorReading> sensors) {
+  public SensorPane(Iterable<SensorReading> sensors, String title) {
     super();
-    initialize(sensors);
+    initialize(sensors, title);
   }
 
   /**
    * Create an empty sensor pane, without any data.
    */
-  public SensorPane() {
-    initialize(new LinkedList<>());
+  public SensorPane(String title) {
+    initialize(new LinkedList<>(), title);
   }
 
   /**
@@ -42,12 +42,12 @@ public class SensorPane extends TitledPane {
    *
    * @param sensors The sensor data to be displayed on the pane.
    */
-  public SensorPane(List<Sensor> sensors) {
-    initialize(sensors.stream().map(Sensor::getReading).toList());
+  public SensorPane(List<Sensor> sensors, String title) {
+    initialize(sensors.stream().map(Sensor::getReading).toList(), title);
   }
 
-  private void initialize(Iterable<SensorReading> sensors) {
-    setText("Sensors");
+  private void initialize(Iterable<SensorReading> sensors, String title) {
+    setText(title);
     sensors.forEach(sensor ->
                         contentBox.getChildren().add(createAndRememberSensorLabel(sensor))
     );
