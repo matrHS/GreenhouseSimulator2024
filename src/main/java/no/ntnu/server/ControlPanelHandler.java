@@ -67,7 +67,7 @@ public class ControlPanelHandler extends Thread {
       } catch (SocketTimeoutException s) {
         processNextQueuedElement();
       } catch (IOException e) {
-        server.closeSocket(server.getCPMap(),this.socket);
+        server.closeSocket(server.getCPMap(), this.socket);
       } catch (ClassNotFoundException e) {
         Logger.error(e.toString());
       }

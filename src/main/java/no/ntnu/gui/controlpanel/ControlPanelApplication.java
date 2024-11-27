@@ -106,7 +106,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
           "No communication channel. See the README on how to use fake event spawner!");
     }
     commandQueue = new LinkedBlockingQueue<>();
-    controller= new MainGuiController(this);
+    controller = new MainGuiController(this);
 
     this.stage = stage;
     this.stage.setTitle("Control Panel");
@@ -165,7 +165,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     this.stage.setMaximized(true);
     stage.getIcons().add(new Image(
         Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
-               .toExternalForm()));
+            .toExternalForm()));
     stage.setScene(scene);
     stage.show();
     Logger.info("GUI subscribes to lifecycle events");
@@ -197,9 +197,16 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     return null;
   }
 
+  /**
+   * Create the bottom pane for the application.
+   * This pane contains buttons to open, close and toggle actuators.
+   *
+   * @return The bottom pane for the application
+   */
   private Node createBottomPane() {
 
-    GridPane bottomPane = new GridPane();
+    HBox bottomPane = new HBox();
+    bottomPane.getStyleClass().add("bottom-pane");
 
     Button openActuators = new Button("Open Actuators");
     Button closeActuators = new Button("Close Actuators");
@@ -209,11 +216,10 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     closeActuators.setOnAction(e -> channel.closeActuators());
     toggleActuators.setOnAction(e -> channel.toggleActuators());
 
-    bottomPane.add(openActuators, 0, 0);
-    bottomPane.add(closeActuators, 1, 0);
-    bottomPane.add(toggleActuators, 2, 0);
+    bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
 
-    return new HBox(bottomPane);
+
+    return bottomPane;
   }
 
   /**
@@ -357,9 +363,9 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
 
-  private void putOnCommandQueue(String[] payload){
+  private void putOnCommandQueue(String[] payload) {
     try {
-     commandQueue.put(payload);
+      commandQueue.put(payload);
     } catch (InterruptedException e) {
       Logger.info("failed to put command on queue.");
     }

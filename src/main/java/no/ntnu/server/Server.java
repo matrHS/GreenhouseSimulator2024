@@ -65,7 +65,13 @@ public class Server {
     }
   }
 
-  public void closeSocket(HashMap map, Socket socket){
+  /**
+   * Closes specific socket.
+   *
+   * @param map    Greenhouse or control panel map
+   * @param socket The socket to close
+   */
+  public void closeSocket(HashMap map, Socket socket) {
     try {
       Logger.info("Attempting to close greenouse socket with port " + socket.getPort());
       socket.close();
@@ -76,13 +82,24 @@ public class Server {
     }
   }
 
-  public HashMap getCPMap(){
+  /**
+   * Get map of control panels.
+   *
+   * @return Map of connected control panels
+   */
+  public HashMap getCPMap() {
     return this.controlPanels;
   }
 
-  public HashMap getNodeMap(){
+  /**
+   * Get map of greenhouse nodes.
+   *
+   * @return Map of connected greenhouse nodes
+   */
+  public HashMap getNodeMap() {
     return this.greenHouseSockets;
   }
+
   /**
    * Run the server, and handle the client.
    */
@@ -95,7 +112,7 @@ public class Server {
       Socket socket = acceptNextClient();
       Logger.info("Connected to: " + socket.getPort());
       Logger.info("holding sockets for: " + greenHouseSockets.keySet() + " and "
-                  + controlPanels.keySet());
+          + controlPanels.keySet());
     }
   }
 
@@ -131,7 +148,7 @@ public class Server {
 
       if (type.equals("cp")) {
         ControlPanelHandler handler = new ControlPanelHandler(socket, outputStream, inputStream,
-                                                              this);
+            this);
         controlPanels.put(socket.getPort(), handler);
         handler.start();
         Logger.info("new control panel connected");

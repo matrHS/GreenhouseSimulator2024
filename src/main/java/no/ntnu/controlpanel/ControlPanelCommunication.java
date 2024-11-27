@@ -49,7 +49,6 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   }
 
 
-
   @Override
   public boolean open() {
     return false;
@@ -104,11 +103,12 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       switch (payload[0]) {
         case "add":
 
-          SensorActuatorNodeInfo nodeInfo = new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
-          for (int i = 2 ; i < payload.length; i+=3) {
-            Actuator actuator = new Actuator(Integer.parseInt(payload[i+1]), payload[i],
+          SensorActuatorNodeInfo nodeInfo =
+              new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
+          for (int i = 2; i < payload.length; i += 3) {
+            Actuator actuator = new Actuator(Integer.parseInt(payload[i + 1]), payload[i],
                 Integer.parseInt(payload[1]));
-            Boolean state = Boolean.parseBoolean(payload[i+2]);
+            Boolean state = Boolean.parseBoolean(payload[i + 2]);
             actuator.set(state);
 
             nodeInfo.addActuator(actuator);
@@ -139,8 +139,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       }
     }
   }
-  private void sendCommandIfExists(){
-    while(this.commandQueue.peek() != null) {
+
+  private void sendCommandIfExists() {
+    while (this.commandQueue.peek() != null) {
       try {
         Logger.info(commandQueue.peek()[1]);
         outputStream.writeObject(commandQueue.poll());
@@ -150,6 +151,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     }
   }
 
+  /**
+   * Closes the communication socket.
+   */
   public void closeCommunication() {
     try {
       socket.close();
@@ -158,6 +162,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
 
     }
   }
+
   /**
    * Starts the thread for the control panel communication and listens for commands from the server.
    */
@@ -167,14 +172,13 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     while (!socket.isClosed()) {
       try {
         socket.setSoTimeout(Config.timeout);
-        Object object  = inputStream.readObject();
-       if (object != null){
-         this.handlePayload(object);
-       }
-      }catch (SocketTimeoutException s) {
-      sendCommandIfExists();
-      }
-      catch (IOException e) {
+        Object object = inputStream.readObject();
+        if (object != null) {
+          this.handlePayload(object);
+        }
+      } catch (SocketTimeoutException s) {
+        sendCommandIfExists();
+      } catch (IOException e) {
         Logger.error("Thread timeout ");
       } catch (ClassNotFoundException e) {
         Logger.error("Failed to understand sent object");

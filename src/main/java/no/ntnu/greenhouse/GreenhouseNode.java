@@ -175,7 +175,9 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
       String[] command = (String[]) objectInputStream.readObject();
       switch (command[0]) {
         case "set":
+          // Broadcast to all actuators
           if (command[1].contains("-1")) {
+            Logger.info("Broadcasting set all actuators");
             node.getActuators()
                 .forEach(actuator -> node.setActuator(actuator.getId(),
                     Boolean.parseBoolean(command[2])));
@@ -184,7 +186,9 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
           }
           break;
         case "toggle":
+          // Broadcast to all actuators
           if (command[1].contains("-1")) {
+            Logger.info("Broadcasting toggle all actuators");
             node.getActuators().forEach(actuator -> node.toggleActuator(actuator.getId()));
           } else {
             node.toggleActuator(Integer.parseInt(command[1]));

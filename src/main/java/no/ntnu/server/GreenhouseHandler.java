@@ -84,7 +84,7 @@ public class GreenhouseHandler extends Thread {
     }
   }
 
-    /**
+  /**
    * Receive a command from the greenhouse.
    * Currently only sensor readings.
    */
@@ -93,10 +93,10 @@ public class GreenhouseHandler extends Thread {
       String[] command = (String[]) inputStream.readObject();
       server.putCommandControlPanel(command);
 
-    } catch (SocketTimeoutException e){
+    } catch (SocketTimeoutException e) {
       //Logger.error(e.getMessage());
-    }catch (IOException e) {
-        server.closeSocket(server.getNodeMap(), this.socket);
+    } catch (IOException e) {
+      server.closeSocket(server.getNodeMap(), this.socket);
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
