@@ -81,7 +81,7 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
     //      communicationChannel.sendActuatorChange(nodeId, actuator.getId(), actuator.isOn());
     //    }
     listeners.forEach(listener ->
-                          listener.onActuatorStateChanged(nodeId, actuator.getId(), actuator.isOn())
+        listener.onActuatorStateChanged(nodeId, actuator.getId(), actuator.isOn())
     );
   }
 
@@ -92,4 +92,5 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
       communicationChannelListener.onCommunicationChannelClosed();
     }
   }
+
 }

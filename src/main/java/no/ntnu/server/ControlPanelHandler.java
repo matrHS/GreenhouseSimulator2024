@@ -5,15 +5,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.security.InvalidKeyException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.SealedObject;
-import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
+import no.ntnu.tools.SocketTimeout;
 
 /**
  * The control panel handler class. This class is responsible for handling the communication between
@@ -53,16 +48,14 @@ public class ControlPanelHandler extends Thread {
    * The main run method of this handler.
    */
   @Override
-  @SuppressWarnings("InfiniteLoopStatement")
   public void run() {
 
     while (!socket.isClosed()) {
       try {
-        socket.setSoTimeout(Config.timeout);
-        String[] payload = (String[]) inputStream.readObject();
-        String[] commands = Config.decrypt(payload);
+        socket.setSoTimeout(SocketTimeout.timeout);
+        String[] commands = (String[]) inputStream.readObject();
         int id;
-        if (commands[0].equals("set")) {
+        if (commands[0].equals("set") || commands[0].equals("toggle")) {
           String[] ids = commands[1].split(":");
           commands[1] = ids[1];
           id = Integer.parseInt(ids[0]);
@@ -73,7 +66,7 @@ public class ControlPanelHandler extends Thread {
       } catch (SocketTimeoutException s) {
         processNextQueuedElement();
       } catch (IOException e) {
-        server.closeSocket(server.getCPMap(),this.socket);
+        server.closeSocket(server.getCPMap(), this.socket);
       } catch (ClassNotFoundException e) {
         Logger.error(e.toString());
       }
@@ -81,26 +74,6 @@ public class ControlPanelHandler extends Thread {
   }
 
 
-  private String[] decryptCommand(SealedObject sealedPayload){
-    String[] payload;
-    Cipher cipher = Config.cipher;
-    try {
-      cipher.init(Cipher.DECRYPT_MODE, Config.key64);
-      payload = (String[])sealedPayload.getObject(cipher);
-
-    } catch (InvalidKeyException e) {
-      throw new RuntimeException(e);
-    } catch (IllegalBlockSizeException e) {
-      throw new RuntimeException(e);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    } catch (BadPaddingException e) {
-      throw new RuntimeException(e);
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException(e);
-    }
-    return payload;
-  }
 
   /**
    * Processes all the commands on the atomic stack and then sends each command sequentially to the

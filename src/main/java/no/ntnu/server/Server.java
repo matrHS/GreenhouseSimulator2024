@@ -6,7 +6,6 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
-import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
 
 /**
@@ -34,11 +33,11 @@ public class Server {
    * Main method for the server.
    */
   public static void main(String[] args) {
-    String[] hello = new String[]{"hello"};
-    String[] encryptedHello = Config.encrypt(hello);
-    Logger.info(encryptedHello[0]);
-    hello = Config.decrypt(encryptedHello);
-    Logger.info(hello[0]);
+//    String[] hello = new String[]{"hello"};
+//    String[] encryptedHello = Config.encrypt(hello);
+//    Logger.info(encryptedHello[0]);
+//    hello = Config.decrypt(encryptedHello);
+//    Logger.info(hello[0]);
     Server server = new Server();
     server.run();
 
@@ -51,10 +50,10 @@ public class Server {
    * @param id       The id of the greenhouse node to send the command to.
    */
   public void putCommandNode(String[] commands, int id) {
-    if (greenHouseSockets.containsKey(id)) {
-      greenHouseSockets.get(id).setCommand(commands);
-    } else if (id == -1) {
+    if (id == -1) {
       greenHouseSockets.forEach((k, v) -> v.setCommand(commands));
+    } else if (greenHouseSockets.containsKey(id)) {
+      greenHouseSockets.get(id).setCommand(commands);
     }
   }
 
@@ -72,7 +71,13 @@ public class Server {
     }
   }
 
-  public void closeSocket(HashMap map, Socket socket){
+  /**
+   * Closes specific socket.
+   *
+   * @param map    Greenhouse or control panel map
+   * @param socket The socket to close
+   */
+  public void closeSocket(HashMap map, Socket socket) {
     try {
       Logger.info("Attempting to close greenouse socket with port " + socket.getPort());
       socket.close();
@@ -83,13 +88,24 @@ public class Server {
     }
   }
 
-  public HashMap getCPMap(){
+  /**
+   * Get map of control panels.
+   *
+   * @return Map of connected control panels
+   */
+  public HashMap getCPMap() {
     return this.controlPanels;
   }
 
-  public HashMap getNodeMap(){
+  /**
+   * Get map of greenhouse nodes.
+   *
+   * @return Map of connected greenhouse nodes
+   */
+  public HashMap getNodeMap() {
     return this.greenHouseSockets;
   }
+
   /**
    * Run the server, and handle the client.
    */
@@ -102,7 +118,7 @@ public class Server {
       Socket socket = acceptNextClient();
       Logger.info("Connected to: " + socket.getPort());
       Logger.info("holding sockets for: " + greenHouseSockets.keySet() + " and "
-                  + controlPanels.keySet());
+          + controlPanels.keySet());
     }
   }
 
@@ -138,18 +154,18 @@ public class Server {
 
       if (type.equals("cp")) {
         ControlPanelHandler handler = new ControlPanelHandler(socket, outputStream, inputStream,
-                                                              this);
+            this);
         controlPanels.put(socket.getPort(), handler);
         handler.start();
         Logger.info("new control panel connected");
-        this.putCommandNode(new String[] {"info"}, -1);
+        this.putCommandNode(new String[] {"info", "-1"}, -1);
       } else {
 
         GreenhouseHandler handler = new GreenhouseHandler(socket, outputStream, inputStream, this);
         greenHouseSockets.put(socket.getPort(), handler);
         handler.start();
         if (!controlPanels.isEmpty()) {
-          this.putCommandNode(new String[] {"info"}, -1);
+          this.putCommandNode(new String[] {"info", "-1"}, -1);
         }
       }
     } catch (IOException e) {

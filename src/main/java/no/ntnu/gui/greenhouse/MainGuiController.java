@@ -4,6 +4,7 @@ import java.util.Map;
 import javafx.scene.control.Tab;
 import no.ntnu.greenhouse.SensorActuatorNode;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
+import no.ntnu.tools.Logger;
 
 /**
  * The controller for the main GUI.
@@ -43,4 +44,6 @@ public class MainGuiController {
     this.mainPage = new MainGui(this);
     return this.mainPage.getMainTab();
   }
+
+
 }

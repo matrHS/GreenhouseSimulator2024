@@ -10,12 +10,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -103,7 +106,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
           "No communication channel. See the README on how to use fake event spawner!");
     }
     commandQueue = new LinkedBlockingQueue<>();
-    controller= new MainGuiController(this);
+    controller = new MainGuiController(this);
 
     this.stage = stage;
     this.stage.setTitle("Control Panel");
@@ -162,7 +165,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     this.stage.setMaximized(true);
     stage.getIcons().add(new Image(
         Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
-               .toExternalForm()));
+            .toExternalForm()));
     stage.setScene(scene);
     stage.show();
     Logger.info("GUI subscribes to lifecycle events");
@@ -184,12 +187,39 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       BorderPane root = new BorderPane();
       VBox headerPane = Default.setHeader(this.controller);
       VBox top = new VBox(headerPane, tabPane);
-      root.setTop(top);
+      root.setTop(headerPane);
+      root.setCenter(tabPane);
+      root.setBottom(createBottomPane());
       return root;
     } catch (Exception e) {
       Logger.error("Error: " + e.getMessage());
     }
     return null;
+  }
+
+  /**
+   * Create the bottom pane for the application.
+   * This pane contains buttons to open, close and toggle actuators.
+   *
+   * @return The bottom pane for the application
+   */
+  private Node createBottomPane() {
+
+    HBox bottomPane = new HBox();
+    bottomPane.getStyleClass().add("bottom-pane");
+
+    Button openActuators = new Button("Open Actuators");
+    Button closeActuators = new Button("Close Actuators");
+    Button toggleActuators = new Button("Toggle Actuators");
+
+    openActuators.setOnAction(e -> channel.openActuators());
+    closeActuators.setOnAction(e -> channel.closeActuators());
+    toggleActuators.setOnAction(e -> channel.toggleActuators());
+
+    bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
+
+
+    return bottomPane;
   }
 
   /**
@@ -333,9 +363,9 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
 
-  private void putOnCommandQueue(String[] payload){
+  private void putOnCommandQueue(String[] payload) {
     try {
-     commandQueue.put(payload);
+      commandQueue.put(payload);
     } catch (InterruptedException e) {
       Logger.info("failed to put command on queue.");
     }

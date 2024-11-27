@@ -5,17 +5,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.SealedObject;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.tools.Config;
+import no.ntnu.tools.RSA;
 import no.ntnu.tools.Logger;
+import no.ntnu.tools.SocketTimeout;
 
 /**
  * The communication channel for the control panel. It communicates with the server and sends
@@ -46,12 +43,12 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     payload[1] = nodeId + ":" + actuatorId;
     payload[2] = Boolean.toString(isOn);
     try {
-      outputStream.writeObject(payload);
+
+      outputStream.writeObject(RSA.encrypt(payload));
     } catch (IOException e) {
       Logger.error("Failed to send actuator change");
     }
   }
-
 
 
   @Override
@@ -103,16 +100,18 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
    * @param object The object from the server
    */
   private void handlePayload(Object object) {
-    String[] payload = (object instanceof String[]) ? (String[]) object : null;
+    String[] payload = (object instanceof String[]) ? RSA.decrypt((String[])object) : null;
+
     if (payload != null) {
       switch (payload[0]) {
         case "add":
 
-          SensorActuatorNodeInfo nodeInfo = new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
-          for (int i = 2 ; i < payload.length; i+=3) {
-            Actuator actuator = new Actuator(Integer.parseInt(payload[i+1]), payload[i],
+          SensorActuatorNodeInfo nodeInfo =
+              new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
+          for (int i = 2; i < payload.length; i += 3) {
+            Actuator actuator = new Actuator(Integer.parseInt(payload[i + 1]), payload[i],
                 Integer.parseInt(payload[1]));
-            Boolean state = Boolean.parseBoolean(payload[i+2]);
+            Boolean state = Boolean.parseBoolean(payload[i + 2]);
             actuator.set(state);
 
             nodeInfo.addActuator(actuator);
@@ -143,10 +142,11 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       }
     }
   }
-  private void sendCommandIfExists(){
-    while(this.commandQueue.peek() != null) {
+
+  private void sendCommandIfExists() {
+    while (this.commandQueue.peek() != null) {
       try {
-        String[] sealedPayload = Config.encrypt(commandQueue.poll());
+        String[] sealedPayload = RSA.encrypt(commandQueue.poll());
         outputStream.writeObject(sealedPayload);
       } catch (IOException e) {
         Logger.info("Failed to write to the server");
@@ -154,6 +154,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     }
   }
 
+  /**
+   * Closes the communication socket.
+   */
   public void closeCommunication() {
     try {
       socket.close();
@@ -162,6 +165,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
 
     }
   }
+
   /**
    * Starts the thread for the control panel communication and listens for commands from the server.
    */
@@ -170,15 +174,14 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     this.instantiate();
     while (!socket.isClosed()) {
       try {
-        socket.setSoTimeout(Config.timeout);
-        Object object  = inputStream.readObject();
-       if (object != null){
-         this.handlePayload(object);
-       }
-      }catch (SocketTimeoutException s) {
-      sendCommandIfExists();
-      }
-      catch (IOException e) {
+        socket.setSoTimeout(SocketTimeout.timeout);
+        Object object = inputStream.readObject();
+        if (object != null) {
+          this.handlePayload(object);
+        }
+      } catch (SocketTimeoutException s) {
+        sendCommandIfExists();
+      } catch (IOException e) {
         Logger.error("Thread timeout ");
       } catch (ClassNotFoundException e) {
         Logger.error("Failed to understand sent object");
@@ -190,4 +193,38 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     this.commandQueue = commandQueue;
   }
 
+  /**
+   * Open all actuators.
+   * Broadcast.
+   */
+  public void openActuators() {
+    sendActuatorChange(-1, -1, true);
+  }
+
+  /**
+   * Close all actuators.
+   * Broadcast.
+   */
+  public void closeActuators() {
+    sendActuatorChange(-1, -1, false);
+  }
+
+  /**
+   * Toggle all actuators.
+   * Broadcast.
+   */
+  public void toggleActuators() {
+    sentActuatorToggle(-1, -1);
+  }
+
+  private void sentActuatorToggle(int nodeId, int actuatorId) {
+    String[] payload = new String[2];
+    payload[0] = "toggle";
+    payload[1] = nodeId + ":" + actuatorId;
+    try {
+      outputStream.writeObject(RSA.encrypt(payload));
+    } catch (IOException e) {
+      Logger.error("Failed to send actuator change");
+    }
+  }
 }
