@@ -6,9 +6,12 @@ import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
@@ -21,7 +24,7 @@ import no.ntnu.tools.SocketTimeout;
  * The GreenhouseNode class is responsible for handling the communication between the greenhouse and
  * the server. It listens for commands from the server and sends sensor readings to the server.
  */
-public class GreenhouseNode implements SensorListener, NodeStateListener, ActuatorListener {
+public class GreenhouseNode extends TimerTask implements SensorListener, NodeStateListener, ActuatorListener  {
   private final static String SERVER_HOST = "localhost";
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
   private int TCP_PORT = 1238;
@@ -35,6 +38,8 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   private final BigInteger[] keys = this.keyGen();
 
   private boolean allowSendReading;
+
+  private ArrayList<ArrayList<SensorReading>> aggregateReadings = new ArrayList<>();
 
 
   /**
@@ -52,11 +57,16 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   public void start() {
     node.start();
     this.commandQueue = new LinkedBlockingQueue<>();
+    Timer minAggregateTimer = new Timer();
+    minAggregateTimer.schedule(this, 5000, 60000);
     while (!socket.isClosed()) {
       listenForCommands();
       sendCommandIfExists();
+
+
     }
   }
+
 
   /**
    * Initializes the greenhouse.
@@ -85,6 +95,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     initiateCommunication();
     System.out.println("Greenhouse initialized and connected");
     processCommand();
+    aggregateReadings = new ArrayList<>();
 
   }
 
@@ -287,9 +298,12 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     String[] readings = new String[sensors.size() + 2];
     readings[0] = "data";
     readings[1] = String.valueOf(socket.getLocalPort());
+    ArrayList<SensorReading> reading1 = new ArrayList<>();
     for (int i = 0; i < sensors.size(); i++) {
       readings[i + 2] = sensors.get(i).getReading().toString();
+      reading1.add(sensors.get(i).getReading());
     }
+    aggregateReadings.add(reading1);
     this.setCommandQueue(readings);
 
   }
@@ -316,13 +330,41 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     this.setCommandQueue(payload);
   }
 
-  private BigInteger[] keyGen(){
+
+  private BigInteger[] keyGen() {
     int p = 7;
     int q = 19;
-    BigInteger product = BigInteger.valueOf(p*q);
-    int totient = (p-1)*(q-1);
+    BigInteger product = BigInteger.valueOf(p * q);
+    int totient = (p - 1) * (q - 1);
     BigInteger pubKey = BigInteger.valueOf(29);
     BigInteger privKey = BigInteger.valueOf(41);
-    return new BigInteger[]{privKey,pubKey,product};
+    return new BigInteger[] {privKey, pubKey, product};
+
+  }
+
+
+  @Override
+  public void run() {
+    ArrayList<SensorReading> aggregate = new ArrayList<>();
+    for (SensorReading reading : aggregateReadings.get(0)) {
+      aggregate.add(new SensorReading(reading.getType(), 0, reading.getUnit()));
+    }
+    for (ArrayList<SensorReading> readings : aggregateReadings) {
+      for (int i = 0; i < readings.size(); i++) {
+        aggregate.get(i).setValue(aggregate.get(i).getValue() + readings.get(i).getValue());
+      }
+    }
+    for (SensorReading reading : aggregate) {
+      reading.setValue(reading.getValue() / aggregateReadings.size());
+    }
+    String[] readings = new String[aggregate.size() + 2];
+    readings[0] = "aggregate";
+    readings[1] = String.valueOf(socket.getLocalPort());
+    for (int i = 0; i < aggregate.size(); i++) {
+      readings[i + 2] = aggregate.get(i).toString();
+    }
+    this.setCommandQueue(readings);
+    aggregateReadings.clear();
+
   }
 }

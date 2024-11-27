@@ -83,7 +83,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
    */
   private List<SensorReading> handleReadings(String[] readings) {
     List<SensorReading> list = new ArrayList<>();
-    if (readings.length > 3) {
+    if (readings.length >= 3) {
       for (int i = 2; i < readings.length; i++) {
         String[] values = readings[i].split(",");
         String type = values[0].split("=")[1];
@@ -137,6 +137,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
           break;
 
         case "update":
+          break;
+        case "aggregate":
+          logic.onAggregateSensorData(Integer.parseInt(payload[1]), handleReadings(payload));
           break;
 
         default:

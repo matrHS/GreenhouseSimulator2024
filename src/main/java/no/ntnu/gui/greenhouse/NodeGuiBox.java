@@ -39,7 +39,7 @@ public class NodeGuiBox implements SensorListener, ActuatorListener {
   public HBox getNodeBox() {
     HBox nodeBox = new HBox();
     actuatorPane = new ActuatorPane(node.getActuators());
-    sensorPane = new SensorPane(node.getSensors());
+    sensorPane = new SensorPane(node.getSensors(), "Sensors");
     nodeBox.getChildren().add(createContent(actuatorPane, sensorPane));
     return nodeBox;
   }
