@@ -3,6 +3,7 @@ package no.ntnu.greenhouse;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
@@ -30,6 +31,8 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   private SensorActuatorNode node;
 
   private LinkedBlockingQueue<String[]> commandQueue;
+
+  private final BigInteger[] keys = this.keyGen();
 
   private boolean allowSendReading;
 
@@ -145,7 +148,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   /**
    * Returns the node information in the format: "empty-command", "nodeID", "actuatorType",
-   * "actuatorID", "actuatorType", "actuatorID", ...
+   * "actuatorID", actuatorState, "actuatorType", "actuatorID", ...
    *
    * @return the node information
    */
@@ -173,7 +176,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
     try {
       String[] payload = (String[]) objectInputStream.readObject();
-      String[] command = RSA.decrypt(payload);
+      String[] command = RSA.decrypt(payload, keys);
       switch (command[0]) {
         case "set":
           // Broadcast to all actuators
@@ -272,7 +275,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   private void setCommandQueue(String[] command) {
     try {
-      String[] payload = RSA.encrypt(command);
+      String[] payload = RSA.encrypt(command,keys);
       this.commandQueue.put(payload);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
@@ -311,5 +314,15 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     payload[2] = actuator.getType();
     payload[3] = String.valueOf(actuator.isOn());
     this.setCommandQueue(payload);
+  }
+
+  private BigInteger[] keyGen(){
+    int p = 7;
+    int q = 19;
+    BigInteger product = BigInteger.valueOf(p*q);
+    int totient = (p-1)*(q-1);
+    BigInteger pubKey = BigInteger.valueOf(29);
+    BigInteger privKey = BigInteger.valueOf(41);
+    return new BigInteger[]{privKey,pubKey,product};
   }
 }

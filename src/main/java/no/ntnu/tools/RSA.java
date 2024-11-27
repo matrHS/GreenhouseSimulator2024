@@ -4,21 +4,7 @@ import java.math.BigInteger;
 
 public class RSA {
 
-  public final static int timeout = 50;
-
-
-  public static BigInteger[] keyGen(){
-    int p = 7;
-    int q = 19;
-    BigInteger product = BigInteger.valueOf(p*q);
-    int totient = (p-1)*(q-1);
-    BigInteger pubKey = BigInteger.valueOf(29);
-    BigInteger privKey = BigInteger.valueOf(41);
-    return new BigInteger[]{privKey,pubKey,product};
-  }
-
-  public  static String[] encrypt(String[] payload){
-    BigInteger[] keys = keyGen();
+  public  static String[] encrypt(String[] payload, BigInteger[] keys){
     int index = 2;
     String[] encryptedPayload = new String[payload.length];
     encryptedPayload[0] = payload[0];
@@ -38,8 +24,7 @@ public class RSA {
     return encryptedPayload;
   }
 
-  public static String[] decrypt(String[] payload){
-    BigInteger[] keys = keyGen();
+  public static String[] decrypt(String[] payload, BigInteger[] keys){
     int index = 2;
     String[] decryptedPayload = new String[payload.length];
     decryptedPayload[0] = payload[0];

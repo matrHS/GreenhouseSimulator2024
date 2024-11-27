@@ -3,6 +3,7 @@ package no.ntnu.controlpanel;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   private Socket socket;
   private LinkedBlockingQueue<String[]> commandQueue;
 
+  private final BigInteger[] keys = this.keyGen();
 
   /**
    * Constructor for the ControlPanelCommunication.
@@ -44,7 +46,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     payload[2] = Boolean.toString(isOn);
     try {
 
-      outputStream.writeObject(RSA.encrypt(payload));
+      outputStream.writeObject(RSA.encrypt(payload,keys));
     } catch (IOException e) {
       Logger.error("Failed to send actuator change");
     }
@@ -100,7 +102,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
    * @param object The object from the server
    */
   private void handlePayload(Object object) {
-    String[] payload = (object instanceof String[]) ? RSA.decrypt((String[])object) : null;
+    String[] payload = (object instanceof String[]) ? RSA.decrypt((String[])object, keys) : null;
 
     if (payload != null) {
       switch (payload[0]) {
@@ -146,7 +148,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   private void sendCommandIfExists() {
     while (this.commandQueue.peek() != null) {
       try {
-        String[] sealedPayload = RSA.encrypt(commandQueue.poll());
+        String[] sealedPayload = RSA.encrypt(commandQueue.poll(), keys);
         outputStream.writeObject(sealedPayload);
       } catch (IOException e) {
         Logger.info("Failed to write to the server");
@@ -222,9 +224,19 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     payload[0] = "toggle";
     payload[1] = nodeId + ":" + actuatorId;
     try {
-      outputStream.writeObject(RSA.encrypt(payload));
+      outputStream.writeObject(RSA.encrypt(payload, keys));
     } catch (IOException e) {
       Logger.error("Failed to send actuator change");
     }
+  }
+
+  private BigInteger[] keyGen(){
+    int p = 7;
+    int q = 19;
+    BigInteger product = BigInteger.valueOf(p*q);
+    int totient = (p-1)*(q-1);
+    BigInteger pubKey = BigInteger.valueOf(29);
+    BigInteger privKey = BigInteger.valueOf(41);
+    return new BigInteger[]{privKey,pubKey,product};
   }
 }
