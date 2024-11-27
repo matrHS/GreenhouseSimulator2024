@@ -142,6 +142,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   private void sendCommandIfExists(){
     while(this.commandQueue.peek() != null) {
       try {
+        Logger.info(commandQueue.peek()[1]);
         outputStream.writeObject(commandQueue.poll());
       } catch (IOException e) {
         Logger.info("Failed to write to the server");
@@ -185,4 +186,38 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     this.commandQueue = commandQueue;
   }
 
+  /**
+   * Open all actuators.
+   * Broadcast.
+   */
+  public void openActuators() {
+    sendActuatorChange(-1, -1, true);
+  }
+
+  /**
+   * Close all actuators.
+   * Broadcast.
+   */
+  public void closeActuators() {
+    sendActuatorChange(-1, -1, false);
+  }
+
+  /**
+   * Toggle all actuators.
+   * Broadcast.
+   */
+  public void toggleActuators() {
+    sentActuatorToggle(-1, -1);
+  }
+
+  private void sentActuatorToggle(int nodeId, int actuatorId) {
+    String[] payload = new String[3];
+    payload[0] = "toggle";
+    payload[1] = nodeId + ":" + actuatorId;
+    try {
+      outputStream.writeObject(payload);
+    } catch (IOException e) {
+      Logger.error("Failed to send actuator change");
+    }
+  }
 }

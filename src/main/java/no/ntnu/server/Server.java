@@ -44,10 +44,10 @@ public class Server {
    * @param id       The id of the greenhouse node to send the command to.
    */
   public void putCommandNode(String[] commands, int id) {
-    if (greenHouseSockets.containsKey(id)) {
-      greenHouseSockets.get(id).setCommand(commands);
-    } else if (id == -1) {
+    if (id == -1) {
       greenHouseSockets.forEach((k, v) -> v.setCommand(commands));
+    } else if (greenHouseSockets.containsKey(id)) {
+      greenHouseSockets.get(id).setCommand(commands);
     }
   }
 

@@ -49,7 +49,6 @@ public class ControlPanelHandler extends Thread {
    * The main run method of this handler.
    */
   @Override
-  @SuppressWarnings("InfiniteLoopStatement")
   public void run() {
 
     while (!socket.isClosed()) {
@@ -57,7 +56,7 @@ public class ControlPanelHandler extends Thread {
         socket.setSoTimeout(Config.timeout);
         String[] commands = (String[]) inputStream.readObject();
         int id;
-        if (commands[0].equals("set")) {
+        if (commands[0].equals("set") || commands[0].equals("toggle")) {
           String[] ids = commands[1].split(":");
           commands[1] = ids[1];
           id = Integer.parseInt(ids[0]);

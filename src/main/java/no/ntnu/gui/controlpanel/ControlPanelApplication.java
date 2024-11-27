@@ -10,12 +10,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -184,12 +187,33 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       BorderPane root = new BorderPane();
       VBox headerPane = Default.setHeader(this.controller);
       VBox top = new VBox(headerPane, tabPane);
-      root.setTop(top);
+      root.setTop(headerPane);
+      root.setCenter(tabPane);
+      root.setBottom(createBottomPane());
       return root;
     } catch (Exception e) {
       Logger.error("Error: " + e.getMessage());
     }
     return null;
+  }
+
+  private Node createBottomPane() {
+
+    GridPane bottomPane = new GridPane();
+
+    Button openActuators = new Button("Open Actuators");
+    Button closeActuators = new Button("Close Actuators");
+    Button toggleActuators = new Button("Toggle Actuators");
+
+    openActuators.setOnAction(e -> channel.openActuators());
+    closeActuators.setOnAction(e -> channel.closeActuators());
+    toggleActuators.setOnAction(e -> channel.toggleActuators());
+
+    bottomPane.add(openActuators, 0, 0);
+    bottomPane.add(closeActuators, 1, 0);
+    bottomPane.add(toggleActuators, 2, 0);
+
+    return new HBox(bottomPane);
   }
 
   /**
