@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
 import no.ntnu.listeners.common.ActuatorListener;
+import no.ntnu.listeners.common.CameraListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
 import no.ntnu.tools.Config;
@@ -20,7 +21,8 @@ import no.ntnu.tools.Logger;
  * The GreenhouseNode class is responsible for handling the communication between the greenhouse and
  * the server. It listens for commands from the server and sends sensor readings to the server.
  */
-public class GreenhouseNode implements SensorListener, NodeStateListener, ActuatorListener {
+public class GreenhouseNode implements SensorListener, NodeStateListener, ActuatorListener,
+    CameraListener {
   private final static String SERVER_HOST = "localhost";
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
   private int TCP_PORT = 1238;
@@ -71,11 +73,12 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
       int windows = Integer.parseInt(args[2]);
       int fans = Integer.parseInt(args[3]);
       int heaters = Integer.parseInt(args[4]);
-      createNode(temperature, humidity, windows, fans, heaters);
+      int cameras = Integer.parseInt(args[5]);
+      createNode(temperature, humidity, windows, fans, heaters, cameras);
     } else {
-      createNode(1, 2, 1, 0, 0);
+      createNode(1, 2, 1, 0, 0, 1);
       System.out.println("Greenhouse initialized with default sensors "
-                         + "(1 temperature, 2 humidity, 1 window)");
+                         + "(1 temperature, 2 humidity, 1 window, 1 camera)");
     }
     this.node.addStateListener(this);
 
@@ -114,10 +117,12 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
    * @param windows     window actuator count
    * @param fans        fan actuator count
    * @param heaters     heater actuator count
+   * @param cameras     camera count
    */
-  private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
+  private void createNode(int temperature, int humidity, int windows, int fans, int heaters,
+                          int cameras) {
     this.node = DeviceFactory.createNode(
-        temperature, humidity, windows, fans, heaters);
+        temperature, humidity, windows, fans, heaters, cameras);
     node.addSensorListener(this);
 
   }
@@ -239,6 +244,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   /**
    * Closes the communication between the node and the server.
    */
+  //TODO is this in use?
   private void stopCommunication() {
     try {
       this.socket.close();
@@ -276,8 +282,6 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   }
 
-
-
   @Override
   public void onNodeReady(SensorActuatorNode node) {
     node.addSensorListener(this);
@@ -296,6 +300,17 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     payload[1] = socket.getLocalPort() + ":" + actuator.getId();
     payload[2] = actuator.getType();
     payload[3] = String.valueOf(actuator.isOn());
+    this.setCommandQueue(payload);
+  }
+
+  @Override
+  public void cameraUpdated(List<Camera> cameras) {
+    String[] payload = new String[2 + cameras.size()];
+    payload[0] = "camera";
+    payload[1] = String.valueOf(socket.getLocalPort());
+    for (int i = 0; i < cameras.size(); i++) {
+      payload[i+2] = cameras.get(i).getId() + ":" +cameras.get(i).getImage();
+    }
     this.setCommandQueue(payload);
   }
 }

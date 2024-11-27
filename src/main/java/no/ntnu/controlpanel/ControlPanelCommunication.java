@@ -8,7 +8,9 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import javafx.scene.image.Image;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
@@ -94,6 +96,25 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   }
 
   /**
+   * Handles the readings from the sensor. The readings are split by comma and the type,
+   * value and unit are extracted.
+   *
+   * @param cameraReading The readings from the sensor
+   * @return A list of sensor readings
+   */
+  private List<Camera> handleCameras(String[] cameraReading) {
+    List<Camera> list = new ArrayList<>();
+    if (cameraReading.length > 3) {
+      for (int i = 2; i < cameraReading.length; i++) {
+        String image = cameraReading[i];
+        int id = Integer.parseInt(cameraReading[0]);
+        list.add(new Camera(id, image));
+      }
+    }
+    return list;
+  }
+
+  /**
    * Handles the payload from the server. The payload is split by comma and the type is extracted.
    *
    * @param object The object from the server
@@ -132,6 +153,10 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
           break;
 
         case "update":
+          break;
+
+        case "image":
+          logic.onImageSensor(Integer.parseInt(payload[1]), handleCameras(payload));
           break;
 
         default:

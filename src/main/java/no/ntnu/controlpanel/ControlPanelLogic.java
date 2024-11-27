@@ -3,6 +3,7 @@ package no.ntnu.controlpanel;
 import java.util.LinkedList;
 import java.util.List;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
@@ -68,6 +69,11 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
   @Override
   public void onSensorData(int nodeId, List<SensorReading> sensors) {
     listeners.forEach(listener -> listener.onSensorData(nodeId, sensors));
+  }
+
+  @Override
+  public void onImageSensor(int nodeId, List<Camera> cameras) {
+    listeners.forEach(listener -> listener.onImageSensor(nodeId, cameras));
   }
 
   @Override

@@ -14,7 +14,6 @@ public class Actuator {
   private final int nodeId;
   private final int id;
   private Map<String, Double> impacts = new HashMap<>();
-
   private ActuatorListener listener;
 
   private boolean on;

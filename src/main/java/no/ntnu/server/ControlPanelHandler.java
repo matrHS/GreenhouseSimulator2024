@@ -18,7 +18,7 @@ public class ControlPanelHandler extends Thread {
 
   private final Socket socket;
   private final String[] allowedCommands = new String[] {"set", "get", "add", "remove", "data",
-                                                         "state", "update"};
+                                                         "state", "update", "image"};
   private ObjectOutputStream outputStream;
   private ObjectInputStream inputStream;
   private AtomicReference<String[]> cmdStack;

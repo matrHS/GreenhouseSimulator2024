@@ -51,10 +51,11 @@ public class GreenhouseSimulator {
   }
 
   // TODO: Refactor into separate NODE class. Separate all node functionality to its own class
-  private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
+  private void createNode(int temperature, int humidity, int windows, int fans, int heaters,
+                          int cameras) {
     initiateCommunication();
     SensorActuatorNode node = DeviceFactory.createNode(
-        temperature, humidity, windows, fans, heaters);
+        temperature, humidity, windows, fans, heaters, cameras);
     nodes.put(node.getId(), node);
   }
 

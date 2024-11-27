@@ -24,8 +24,10 @@ import no.ntnu.controlpanel.ControlPanelCommunication;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.gui.common.ActuatorPane;
+import no.ntnu.gui.common.CameraPane;
 import no.ntnu.gui.common.SensorPane;
 import no.ntnu.gui.greenhouse.Default;
 import no.ntnu.gui.greenhouse.MainGuiController;
@@ -44,6 +46,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private static ControlPanelCommunication channel;
   private final Map<Integer, SensorPane> sensorPanes = new HashMap<>();
   private final Map<Integer, ActuatorPane> actuatorPanes = new HashMap<>();
+  private final Map <Integer, CameraPane> cameraPanes = new HashMap<>();
   private final Map<Integer, SensorActuatorNodeInfo> nodeInfos = new HashMap<>();
   private final Map<Integer, Tab> nodeTabs = new HashMap<>();
   private HBox mainPane;
@@ -210,6 +213,23 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
   /**
+   * Handle the event when new images from camera is received from a node.
+   *
+   * @param nodeId  ID of the node
+   * @param cameras List of all current cameras
+   */
+  @Override
+  public void onImageSensor(int nodeId, List<Camera> cameras) {
+    Logger.info("Image data from greenhouse " + nodeId);
+    CameraPane cameraPane = cameraPanes.get(nodeId);
+    if (cameraPane != null) {
+      cameraPane.update(cameras);
+    } else {
+      Logger.error("No camera section for greenhouse " + nodeId);
+    }
+  }
+
+  /**
    * Handle the event when an actuator changes state.
    *
    * @param nodeId     ID of the node to which the actuator is attached
@@ -310,7 +330,10 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     sensorPanes.put(nodeInfo.getId(), sensorPane);
     ActuatorPane actuatorPane = new ActuatorPane(nodeInfo.getActuators(), this);
     actuatorPanes.put(nodeInfo.getId(), actuatorPane);
-    tab.setContent(new VBox(sensorPane, actuatorPane));
+    CameraPane cameraPane = new CameraPane();
+    cameraPanes.put(nodeInfo.getId(), cameraPane);
+
+    tab.setContent(new VBox(sensorPane, actuatorPane, cameraPane));
     nodeTabs.put(nodeInfo.getId(), tab);
     return tab;
   }

@@ -2,6 +2,7 @@ package no.ntnu.listeners.controlpanel;
 
 import java.util.List;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
+import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
 
 /**
@@ -34,6 +35,14 @@ public interface GreenhouseEventListener {
    * @param sensors List of all current sensor values
    */
   void onSensorData(int nodeId, List<SensorReading> sensors);
+
+  /**
+   * This event is fired when new images from the webcam is received from a node.
+   *
+   * @param nodeId  ID of the node
+   * @param cameras List of all current cameras
+   */
+  void onImageSensor(int nodeId, List<Camera> cameras);
 
   /**
    * This event is fired when an actuator changes state.

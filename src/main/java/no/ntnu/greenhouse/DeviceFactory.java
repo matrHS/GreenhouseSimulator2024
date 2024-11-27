@@ -1,5 +1,11 @@
 package no.ntnu.greenhouse;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Base64;
+import no.ntnu.tools.Logger;
+
 /**
  * A factory for producing sensors and actuators of specific types.
  */
@@ -30,10 +36,12 @@ public class DeviceFactory {
    * @param windowCount            Number of windows the device is connected to
    * @param fanCount               Number of fans the device is connected to
    * @param heaterCount            Number of heaters the device is connected to
+   * @param cameraCount            Number of cameras the device is connected to
    * @return The created sensor/actuator device, with a unique ID
    */
   public static SensorActuatorNode createNode(int temperatureSensorCount, int humiditySensorCount,
-                                              int windowCount, int fanCount, int heaterCount) {
+                                              int windowCount, int fanCount, int heaterCount,
+                                              int cameraCount) {
     SensorActuatorNode node = new SensorActuatorNode(generateUniqueNodeId());
     if (temperatureSensorCount > 0) {
       node.addSensors(DeviceFactory.createTemperatureSensor(), temperatureSensorCount);
@@ -49,6 +57,11 @@ public class DeviceFactory {
     }
     if (heaterCount > 0) {
       addActuators(node, DeviceFactory.createHeater(node.getId()), heaterCount);
+    }
+    if (cameraCount > 0) {
+
+      node.addCameras(DeviceFactory.createCamera(node.getId()), cameraCount);
+
     }
     return node;
   }
@@ -75,6 +88,28 @@ public class DeviceFactory {
   public static Sensor createTemperatureSensor() {
     return new Sensor(SENSOR_TYPE_TEMPERATURE, MIN_TEMPERATURE, MAX_TEMPERATURE,
                       randomize(NORMAL_GREENHOUSE_TEMPERATURE, 1.0), TEMPERATURE_UNIT);
+  }
+
+  /**
+   * Create a typical camera.
+   *
+   * @param nodeId ID of the node to which this camera will be connected
+   * @return The camera
+   */
+  public static Camera createCamera(int nodeId) {
+    int random = (int) (Math.random() * 5) + 1;
+    String imageFileName = "/images/webcamera" + random + ".jpg";
+    File fi = new File(DeviceFactory.class.getResource(imageFileName).getPath());
+    byte[] fileContent;
+    String stringImage = "";
+    try (FileInputStream fis = new FileInputStream(fi)) {
+      fileContent = fis.readAllBytes();
+      stringImage = Base64.getEncoder().encodeToString(fileContent);
+    } catch (IOException e) {
+      Logger.error(e.toString());
+    }
+
+    return new Camera(nodeId, stringImage);
   }
 
   /**
