@@ -280,14 +280,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
   /**
-   * Reload the center pane.
-   */
-  private void reloadCenterPane() {
-    mainPane.getChildren().clear();
-    mainPane.getChildren().add(setMainPage());
-  }
-
-  /**
    * Add a node tab.
    *
    * @param nodeInfo Information about the added node
@@ -358,6 +350,9 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     putOnCommandQueue(payload);
   }
 
+  /**
+   * Stop the application.
+   */
   @Override
   public void stop() {
     // This code is reached only after the GUI-window is closed
