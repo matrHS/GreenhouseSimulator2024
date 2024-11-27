@@ -5,8 +5,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.security.InvalidKeyException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.SealedObject;
 import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
 
@@ -44,7 +49,6 @@ public class ControlPanelHandler extends Thread {
     this.cmdStack = new AtomicReference<>();
     this.commandQueue = new LinkedBlockingQueue<>();
   }
-
   /**
    * The main run method of this handler.
    */
@@ -55,7 +59,8 @@ public class ControlPanelHandler extends Thread {
     while (!socket.isClosed()) {
       try {
         socket.setSoTimeout(Config.timeout);
-        String[] commands = (String[]) inputStream.readObject();
+        String[] payload = (String[]) inputStream.readObject();
+        String[] commands = Config.decrypt(payload);
         int id;
         if (commands[0].equals("set")) {
           String[] ids = commands[1].split(":");
@@ -73,6 +78,28 @@ public class ControlPanelHandler extends Thread {
         Logger.error(e.toString());
       }
     }
+  }
+
+
+  private String[] decryptCommand(SealedObject sealedPayload){
+    String[] payload;
+    Cipher cipher = Config.cipher;
+    try {
+      cipher.init(Cipher.DECRYPT_MODE, Config.key64);
+      payload = (String[])sealedPayload.getObject(cipher);
+
+    } catch (InvalidKeyException e) {
+      throw new RuntimeException(e);
+    } catch (IllegalBlockSizeException e) {
+      throw new RuntimeException(e);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } catch (BadPaddingException e) {
+      throw new RuntimeException(e);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+    return payload;
   }
 
   /**

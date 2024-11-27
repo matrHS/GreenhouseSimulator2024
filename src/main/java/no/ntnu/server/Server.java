@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
 
 /**
@@ -33,8 +34,14 @@ public class Server {
    * Main method for the server.
    */
   public static void main(String[] args) {
+    String[] hello = new String[]{"hello"};
+    String[] encryptedHello = Config.encrypt(hello);
+    Logger.info(encryptedHello[0]);
+    hello = Config.decrypt(encryptedHello);
+    Logger.info(hello[0]);
     Server server = new Server();
     server.run();
+
   }
 
   /**

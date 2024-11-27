@@ -5,9 +5,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.SealedObject;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.tools.Config;
@@ -142,7 +146,8 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   private void sendCommandIfExists(){
     while(this.commandQueue.peek() != null) {
       try {
-        outputStream.writeObject(commandQueue.poll());
+        String[] sealedPayload = Config.encrypt(commandQueue.poll());
+        outputStream.writeObject(sealedPayload);
       } catch (IOException e) {
         Logger.info("Failed to write to the server");
       }

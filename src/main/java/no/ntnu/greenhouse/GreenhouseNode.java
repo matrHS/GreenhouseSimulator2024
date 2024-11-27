@@ -258,7 +258,8 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   private void setCommandQueue(String[] command){
     try {
-      this.commandQueue.put(command);
+      String[] payload = Config.encrypt(command);
+      this.commandQueue.put(payload);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
