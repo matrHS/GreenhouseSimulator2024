@@ -5,12 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicReference;
-import no.ntnu.tools.Config;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.SocketTimeout;
 
 /**
  * The greenhouse handler class. This class
@@ -39,7 +35,7 @@ public class GreenhouseHandler extends Thread {
       this.inputStream = inputStream;
       this.commandQueue = new LinkedBlockingQueue<>();
       this.server = server;
-      socket.setSoTimeout(Config.timeout);
+      socket.setSoTimeout(SocketTimeout.timeout);
 
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -84,7 +80,7 @@ public class GreenhouseHandler extends Thread {
     }
   }
 
-    /**
+  /**
    * Receive a command from the greenhouse.
    * Currently only sensor readings.
    */
@@ -93,10 +89,10 @@ public class GreenhouseHandler extends Thread {
       String[] command = (String[]) inputStream.readObject();
       server.putCommandControlPanel(command);
 
-    } catch (SocketTimeoutException e){
+    } catch (SocketTimeoutException e) {
       //Logger.error(e.getMessage());
-    }catch (IOException e) {
-        server.closeSocket(server.getNodeMap(), this.socket);
+    } catch (IOException e) {
+      server.closeSocket(server.getNodeMap(), this.socket);
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }

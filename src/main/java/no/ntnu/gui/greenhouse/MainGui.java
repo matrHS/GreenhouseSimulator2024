@@ -3,6 +3,8 @@ package no.ntnu.gui.greenhouse;
 import java.util.Objects;
 import javafx.geometry.HPos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -74,6 +76,8 @@ public class MainGui {
     mainScene.setRight(new HBox());
     return new Tab("Home Page", mainScene);
   }
+
+
 
   /**
    * Create the center pane for the application.

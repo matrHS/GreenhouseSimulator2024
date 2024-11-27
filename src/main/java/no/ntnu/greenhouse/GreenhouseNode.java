@@ -3,25 +3,29 @@ package no.ntnu.greenhouse;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeoutException;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CameraListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
-import no.ntnu.tools.Config;
+import no.ntnu.tools.RSA;
 import no.ntnu.tools.Logger;
+import no.ntnu.tools.SocketTimeout;
 
 /**
  * The GreenhouseNode class is responsible for handling the communication between the greenhouse and
  * the server. It listens for commands from the server and sends sensor readings to the server.
  */
-public class GreenhouseNode implements SensorListener, NodeStateListener, ActuatorListener,
+public class GreenhouseNode extends TimerTask implements SensorListener, NodeStateListener, ActuatorListener,
     CameraListener {
   private final static String SERVER_HOST = "localhost";
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
@@ -33,7 +37,11 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   private LinkedBlockingQueue<String[]> commandQueue;
 
+  private final BigInteger[] keys = this.keyGen();
+
   private boolean allowSendReading;
+
+  private ArrayList<ArrayList<SensorReading>> aggregateReadings = new ArrayList<>();
 
 
   /**
@@ -51,11 +59,16 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   public void start() {
     node.start();
     this.commandQueue = new LinkedBlockingQueue<>();
-    while(!socket.isClosed()){
+    Timer minAggregateTimer = new Timer();
+    minAggregateTimer.schedule(this, 5000, 60000);
+    while (!socket.isClosed()) {
       listenForCommands();
       sendCommandIfExists();
+
+
     }
   }
+
 
   /**
    * Initializes the greenhouse.
@@ -85,6 +98,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     initiateCommunication();
     System.out.println("Greenhouse initialized and connected");
     processCommand();
+    aggregateReadings = new ArrayList<>();
 
   }
 
@@ -136,7 +150,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     // TODO - here you can set up the TCP or UDP communication
     try {
       this.socket = new Socket(SERVER_HOST, this.TCP_PORT);
-      socket.setSoTimeout(Config.timeout);
+      socket.setSoTimeout(SocketTimeout.timeout);
       this.objectInputStream = new ObjectInputStream(socket.getInputStream());
       this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
       String[] payload = nodeInfoForAddingNodesOnCPanel();
@@ -150,12 +164,12 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   /**
    * Returns the node information in the format: "empty-command", "nodeID", "actuatorType",
-   * "actuatorID", "actuatorType", "actuatorID", ...
+   * "actuatorID", actuatorState, "actuatorType", "actuatorID", ...
    *
    * @return the node information
    */
-  private String[] nodeInfoForAddingNodesOnCPanel(){
-    String[] nodeInfo = new String[2 + node.getActuators().size()*3];
+  private String[] nodeInfoForAddingNodesOnCPanel() {
+    String[] nodeInfo = new String[2 + node.getActuators().size() * 3];
 
     nodeInfo[1] = String.valueOf(socket.getLocalPort());
     int index = 2;
@@ -164,7 +178,7 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
       nodeInfo[index + 1] = String.valueOf(actuator.getId());
 
       nodeInfo[index + 2] = String.valueOf(actuator.isOn());
-      index = index +3;
+      index = index + 3;
 
     }
 
@@ -177,19 +191,34 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   private void processCommand() {
 
     try {
-      String[] command = (String[]) objectInputStream.readObject();
+      String[] payload = (String[]) objectInputStream.readObject();
+      String[] command = RSA.decrypt(payload, keys);
       switch (command[0]) {
         case "set":
-          node.setActuator(Integer.parseInt(command[1]), Boolean.parseBoolean(command[2]));
+          // Broadcast to all actuators
+          if (command[1].contains("-1")) {
+            Logger.info("Broadcasting set all actuators");
+            node.getActuators()
+                .forEach(actuator -> node.setActuator(actuator.getId(),
+                    Boolean.parseBoolean(command[2])));
+          } else {
+            node.setActuator(Integer.parseInt(command[1]), Boolean.parseBoolean(command[2]));
+          }
           break;
-        case "actuate":
-          node.toggleActuator(Integer.parseInt(command[1]));
+        case "toggle":
+          // Broadcast to all actuators
+          if (command[1].contains("-1")) {
+            Logger.info("Broadcasting toggle all actuators");
+            node.getActuators().forEach(actuator -> node.toggleActuator(actuator.getId()));
+          } else {
+            node.toggleActuator(Integer.parseInt(command[1]));
+          }
           break;
         case "info":
-          String[] payload = nodeInfoForAddingNodesOnCPanel();
-          payload[0] = "add";
+          String[] nodeInfo = nodeInfoForAddingNodesOnCPanel();
+          nodeInfo[0] = "add";
           Logger.info("sending node info to server");
-          this.setCommandQueue(payload);
+          this.setCommandQueue(nodeInfo);
           allowSendReading = true;
           break;
 
@@ -198,10 +227,10 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
       }
     } catch (RuntimeException e) {
       Logger.error(e.toString());
-    }catch (SocketTimeoutException e ){
-    }catch (IOException e){
+    } catch (SocketTimeoutException e) {
+    } catch (IOException e) {
       Logger.error("failed to read");
-    }catch (ClassNotFoundException e){
+    } catch (ClassNotFoundException e) {
       Logger.error("wrong type of object dumbass");
 
     }
@@ -212,10 +241,9 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
    * Command
    * SensorID
    * Value(s)
-   *
    */
-  private void sendCommandIfExists(){
-    while(this.commandQueue.peek() != null) {
+  private void sendCommandIfExists() {
+    while (this.commandQueue.peek() != null) {
       try {
         objectOutputStream.writeObject(commandQueue.poll());
       } catch (IOException e) {
@@ -230,10 +258,10 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
   private String[] receiveCommand() {
     try {
       return (String[]) objectInputStream.readObject();
-    }catch (SocketTimeoutException e){
-      return  null;
+    } catch (SocketTimeoutException e) {
+      return null;
     } catch (IOException e) {
-     // Logger.error("Timeout when reading command\n" + e.toString());
+      // Logger.error("Timeout when reading command\n" + e.toString());
       throw new RuntimeException(e);
     } catch (ClassNotFoundException e) {
       Logger.error(e.toString());
@@ -255,16 +283,17 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   private void listenForCommands() {
     try {
-      socket.setSoTimeout(Config.timeout);
+      socket.setSoTimeout(SocketTimeout.timeout);
       processCommand();
     } catch (IOException e) {
       Logger.error("failed to read from server");
     }
   }
 
-  private void setCommandQueue(String[] command){
+  private void setCommandQueue(String[] command) {
     try {
-      this.commandQueue.put(command);
+      String[] payload = RSA.encrypt(command,keys);
+      this.commandQueue.put(payload);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -272,13 +301,16 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
 
   @Override
   public void sensorsUpdated(List<Sensor> sensors) {
-      String[] readings = new String[sensors.size() + 2];
-      readings[0] = "data";
-      readings[1] = String.valueOf(socket.getLocalPort());
-      for (int i = 0; i < sensors.size(); i++) {
-        readings[i + 2] = sensors.get(i).getReading().toString();
+    String[] readings = new String[sensors.size() + 2];
+    readings[0] = "data";
+    readings[1] = String.valueOf(socket.getLocalPort());
+    ArrayList<SensorReading> reading1 = new ArrayList<>();
+    for (int i = 0; i < sensors.size(); i++) {
+      readings[i + 2] = sensors.get(i).getReading().toString();
+      reading1.add(sensors.get(i).getReading());
     }
-      this.setCommandQueue(readings);
+    aggregateReadings.add(reading1);
+    this.setCommandQueue(readings);
 
   }
 
@@ -309,8 +341,45 @@ public class GreenhouseNode implements SensorListener, NodeStateListener, Actuat
     payload[0] = "camera";
     payload[1] = String.valueOf(socket.getLocalPort());
     for (int i = 0; i < cameras.size(); i++) {
-      payload[i+2] = cameras.get(i).getId() + ":" +cameras.get(i).getImage();
+      payload[i + 2] = cameras.get(i).getId() + ":" + cameras.get(i).getImage();
     }
     this.setCommandQueue(payload);
+  }
+
+  private BigInteger[] keyGen() {
+    int p = 7;
+    int q = 19;
+    BigInteger product = BigInteger.valueOf(p * q);
+    int totient = (p - 1) * (q - 1);
+    BigInteger pubKey = BigInteger.valueOf(29);
+    BigInteger privKey = BigInteger.valueOf(41);
+    return new BigInteger[] {privKey, pubKey, product};
+
+  }
+
+
+  @Override
+  public void run() {
+    ArrayList<SensorReading> aggregate = new ArrayList<>();
+    for (SensorReading reading : aggregateReadings.get(0)) {
+      aggregate.add(new SensorReading(reading.getType(), 0, reading.getUnit()));
+    }
+    for (ArrayList<SensorReading> readings : aggregateReadings) {
+      for (int i = 0; i < readings.size(); i++) {
+        aggregate.get(i).setValue(aggregate.get(i).getValue() + readings.get(i).getValue());
+      }
+    }
+    for (SensorReading reading : aggregate) {
+      reading.setValue(reading.getValue() / aggregateReadings.size());
+    }
+    String[] readings = new String[aggregate.size() + 2];
+    readings[0] = "aggregate";
+    readings[1] = String.valueOf(socket.getLocalPort());
+    for (int i = 0; i < aggregate.size(); i++) {
+      readings[i + 2] = aggregate.get(i).toString();
+    }
+    this.setCommandQueue(readings);
+    aggregateReadings.clear();
+
   }
 }

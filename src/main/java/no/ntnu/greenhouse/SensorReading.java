@@ -19,7 +19,7 @@ public class SensorReading {
    */
   public SensorReading(String type, double value, String unit) {
     this.type = type;
-    this.value = value;
+    setValue(value);
     this.unit = unit;
   }
 
@@ -32,7 +32,7 @@ public class SensorReading {
   }
 
   public void setValue(double newValue) {
-    this.value = newValue;
+    this.value = Math.floor(newValue * 100) / 100;
   }
 
   public String getUnit() {

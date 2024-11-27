@@ -7,8 +7,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
+import no.ntnu.tools.SocketTimeout;
 
 /**
  * The control panel handler class. This class is responsible for handling the communication between
@@ -44,20 +44,18 @@ public class ControlPanelHandler extends Thread {
     this.cmdStack = new AtomicReference<>();
     this.commandQueue = new LinkedBlockingQueue<>();
   }
-
   /**
    * The main run method of this handler.
    */
   @Override
-  @SuppressWarnings("InfiniteLoopStatement")
   public void run() {
 
     while (!socket.isClosed()) {
       try {
-        socket.setSoTimeout(Config.timeout);
+        socket.setSoTimeout(SocketTimeout.timeout);
         String[] commands = (String[]) inputStream.readObject();
         int id;
-        if (commands[0].equals("set")) {
+        if (commands[0].equals("set") || commands[0].equals("toggle")) {
           String[] ids = commands[1].split(":");
           commands[1] = ids[1];
           id = Integer.parseInt(ids[0]);
@@ -68,12 +66,14 @@ public class ControlPanelHandler extends Thread {
       } catch (SocketTimeoutException s) {
         processNextQueuedElement();
       } catch (IOException e) {
-        server.closeSocket(server.getCPMap(),this.socket);
+        server.closeSocket(server.getCPMap(), this.socket);
       } catch (ClassNotFoundException e) {
         Logger.error(e.toString());
       }
     }
   }
+
+
 
   /**
    * Processes all the commands on the atomic stack and then sends each command sequentially to the

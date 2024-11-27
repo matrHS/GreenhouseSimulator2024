@@ -10,7 +10,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -45,6 +47,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private static ControlPanelLogic logic;
   private static ControlPanelCommunication channel;
   private final Map<Integer, SensorPane> sensorPanes = new HashMap<>();
+  private final Map<Integer, SensorPane> aggregatePanes = new HashMap<>();
   private final Map<Integer, ActuatorPane> actuatorPanes = new HashMap<>();
   private final Map <Integer, CameraPane> cameraPanes = new HashMap<>();
   private final Map<Integer, SensorActuatorNodeInfo> nodeInfos = new HashMap<>();
@@ -90,8 +93,8 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    *
    * @return The empty sensor pane
    */
-  private static SensorPane createEmptySensorPane() {
-    return new SensorPane();
+  private static SensorPane createEmptySensorPane(String title) {
+    return new SensorPane(title);
   }
 
   /**
@@ -106,7 +109,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
           "No communication channel. See the README on how to use fake event spawner!");
     }
     commandQueue = new LinkedBlockingQueue<>();
-    controller= new MainGuiController(this);
+    controller = new MainGuiController(this);
 
     this.stage = stage;
     this.stage.setTitle("Control Panel");
@@ -165,7 +168,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     this.stage.setMaximized(true);
     stage.getIcons().add(new Image(
         Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
-               .toExternalForm()));
+            .toExternalForm()));
     stage.setScene(scene);
     stage.show();
     Logger.info("GUI subscribes to lifecycle events");
@@ -187,12 +190,39 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       BorderPane root = new BorderPane();
       VBox headerPane = Default.setHeader(this.controller);
       VBox top = new VBox(headerPane, tabPane);
-      root.setTop(top);
+      root.setTop(headerPane);
+      root.setCenter(tabPane);
+      root.setBottom(createBottomPane());
       return root;
     } catch (Exception e) {
       Logger.error("Error: " + e.getMessage());
     }
     return null;
+  }
+
+  /**
+   * Create the bottom pane for the application.
+   * This pane contains buttons to open, close and toggle actuators.
+   *
+   * @return The bottom pane for the application
+   */
+  private Node createBottomPane() {
+
+    HBox bottomPane = new HBox();
+    bottomPane.getStyleClass().add("bottom-pane");
+
+    Button openActuators = new Button("Open Actuators");
+    Button closeActuators = new Button("Close Actuators");
+    Button toggleActuators = new Button("Toggle Actuators");
+
+    openActuators.setOnAction(e -> channel.openActuators());
+    closeActuators.setOnAction(e -> channel.closeActuators());
+    toggleActuators.setOnAction(e -> channel.toggleActuators());
+
+    bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
+
+
+    return bottomPane;
   }
 
   /**
@@ -255,6 +285,17 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       }
     } else {
       Logger.error("No actuator section for greenhouse " + nodeId);
+    }
+  }
+
+  @Override
+  public void onAggregateSensorData(int nodeId, List<SensorReading> sensors) {
+    Logger.info("1 minute aggregate data from greenhouse " + nodeId);
+    SensorPane aggregatePane = aggregatePanes.get(nodeId);
+    if (aggregatePane != null) {
+      aggregatePane.update(sensors);
+    } else {
+      Logger.error("No sensor section for greenhouse " + nodeId);
     }
   }
 
@@ -326,14 +367,16 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    */
   private Tab createNodeTab(SensorActuatorNodeInfo nodeInfo) {
     Tab tab = new Tab("Node " + nodeInfo.getId());
-    SensorPane sensorPane = createEmptySensorPane();
+    SensorPane sensorPane = createEmptySensorPane("Sensors");
     sensorPanes.put(nodeInfo.getId(), sensorPane);
     ActuatorPane actuatorPane = new ActuatorPane(nodeInfo.getActuators(), this);
     actuatorPanes.put(nodeInfo.getId(), actuatorPane);
     CameraPane cameraPane = new CameraPane();
     cameraPanes.put(nodeInfo.getId(), cameraPane);
+    SensorPane aggregatePane = new SensorPane("1 minute average");
+    aggregatePanes.put(nodeInfo.getId(), aggregatePane);
+    tab.setContent(new VBox(sensorPane, actuatorPane, cameraPane, aggregatePane));
 
-    tab.setContent(new VBox(sensorPane, actuatorPane, cameraPane));
     nodeTabs.put(nodeInfo.getId(), tab);
     return tab;
   }
@@ -348,9 +391,9 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
 
-  private void putOnCommandQueue(String[] payload){
+  private void putOnCommandQueue(String[] payload) {
     try {
-     commandQueue.put(payload);
+      commandQueue.put(payload);
     } catch (InterruptedException e) {
       Logger.info("failed to put command on queue.");
     }

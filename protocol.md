@@ -19,30 +19,32 @@ distributed application.
   it.
 
 ## The underlying transport protocol
+<!--TODO - what transport-layer protocol do you use? TCP? UDP? What port number(s)? Why did you 
+choose this transport layer protocol? -->
 
-TODO - what transport-layer protocol do you use? TCP? UDP? What port number(s)? Why did you 
-choose this transport layer protocol?
 
 TCP Port 1238.
 TCP is used to ensure that our data is successfully transferred between the various parts of the system.
 
 ## The architecture
+<!--TODO - show the general architecture of your network. Which part is a server? Who are clients? 
+Do you have one or several servers? Perhaps include a picture here. -->
 
-TODO - show the general architecture of your network. Which part is a server? Who are clients? 
-Do you have one or several servers? Perhaps include a picture here. 
-
-Control Panel is the server and sensors are the Clients (Control Panels are the nodes whilst the sensors are the actors )
-
-Greenhouses and control panels are both Clients whilst a central server handles communication between them.
-
+This program treats each greenhouse as a separate node with multiple sensors and actuators connected to it. The server
+is able to handle a large amount of greenhouses. The greenhouses interfaces with a handler that is contained on a singular
+discrete server. From the server commands are sent to and from the greenhouse nodes and control panels. control panels
+are connected to the server similarly to the greenhouse nodes. Both control panels and greenhouses are uniquely
+indetified by their local socket port, since its not possible for two sockets to use the same port. Disconnected ports
+are also removed so in the edge case of the same port being used after another closed, they are not mistaken for each other.
+![Untitled Diagram.drawio.png](..%2F..%2F..%2F..%2FDownloads%2FUntitled%20Diagram.drawio.png)
 
 ## The flow of information and events
-
-TODO - describe what each network node does and when. Some periodic events? Some reaction on 
+<!--TODO - describe what each network node does and when. Some periodic events? Some reaction on 
 incoming packets? Perhaps split into several subsections, where each subsection describes one 
-node type (For example: one subsection for sensor/actuator nodes, one for control panel nodes).
+node type (For example: one subsection for sensor/actuator nodes, one for control panel nodes). -->
 
-TODO - Expand
+<!--TODO - Expand -->
+![ServerFlowChart.drawio.png](..%2F..%2F..%2F..%2FDownloads%2FServerFlowChart.drawio.png)
 
 For sensor data the data should be buffered and sent in "bulks" to the server. If the temperature rises too fast the
 server should be notified immediately. Sensor nodes periodically sends buffered sensor data every 30 seconds to reduce
@@ -52,40 +54,71 @@ Sensor data from the Node is sent to the server when the sensor data is updated.
 The server updates all connected control panels with the newly acquired sensor data.
 
 ## Connection and state
-
-TODO - is your communication protocol connection-oriented or connection-less? Is it stateful or 
-stateless? 
-
-Connection-oriented. It is a stateful communication due to the sensors holding its own data if the server disconnect 
-away.
+<!-- TODO - is your communication protocol connection-oriented or connection-less? Is it stateful or 
+stateless? -->
+The application uses a connection-oriented protocol. It is a stateful communication due to the sensors holding its own
+data if the server disconnects.
 
 ## Types, constants
+<!--TODO - Do you have some specific value types you use in several messages? They you can describe 
+them here. --> 
 
-TODO - Do you have some specific value types you use in several messages? They you can describe 
-them here.
-
-We plan to use an object we define
 
 ## Message format
+<!--TODO - describe the general format of all messages. Then describe specific format for each 
+message type in your protocol. -->
 
-TODO - describe the general format of all messages. Then describe specific format for each 
-message type in your protocol.
+Commands and information sent over the TCP socket is sent as a string array, where the first position is the
+specific command being sent and the second position is the node id and optionally actuator ID. This means this slot 
+functions as both a destination and source address. When sending from the control panel, second slot identifies the 
+target for actions to be performed on, while when receiving information from the greenhouse, this slot is used to 
+identify which node the information is sent from. In the case of actuators being toggled or set, the actuator ID is
+appended to the node id with a colon separating them. This slot can also be used to broadcast, in which case it is set
+to -1.
 
-The start of the message should contain commands and statuses. Due to us using objects we can use a HashMap to easily
-identify the commands, status and data. This will be variable length.
+From slot 3 and onward is the information actually being transmitted. This part can contain a variety information and 
+is also end-to-end encrypted using a rudimentary RSA encryption.  
 
-Messages are structured as a list of objects where the objects are strings.
-First argument is the command, second argument is the destination port along with eventual nodeId for actuators and
-every argument after are context dependent on the command used.
+**Current usable commands are:**   
+Server side: "add", "data", "state", "info"  
+Client side: "set", "toggle"
 
-An example of a command that sets actuator 2 on node with socket port 35124 to Open.
+**command structures**:  
+adding a node to the server.  
+{"add", "nodeId", "actuatorType", "actuatorId", "actuatorState", "actuatorType" ... "actuatorState"}  
+here the third slot is the type of actuator, the fourth slot its ID and the fifth slot its state, then the pattern repeats  
 
+Sending reading data to the control panel.  
+{"data", "nodeId", "sensorType=type, value=value, unit=unit",...., "sensorType=type, value=value, unit=unit"}   
+This method of transmitting information works slightly differently, instead of each value being in its own string,
+the entire string contains alle the information for a given sensor.
+
+Changing the state of an actuator on the control panel.  
+{"state", "nodeId:actuatorId", "actuatorType","actuatorState"}
+
+Setting the state of an actuator in a greenhouse:  
+{"set", "nodeId:actuatorId","desiredState"}
+
+Toggling the state of an actuator in a greenhouse:  
+{"toggle", "nodeId:actuatorId"}
+
+getting all information from all nodes (sent by the server whenever a control panel connects)  
+{"info","broadcastCode"}  
+The general purpose broadcast code is set to -1 as it is not possible for a socket connection to have a port number of -1
+
+**Command examples:**   
+Setting the second actuator on node 35124 to be on.  
 {"Set","35124:2","True"}
+
+Getting all info of all nodes:  
+{"info", "-1"}
+
+Adding a node to the control panel:  
+{"add", "23423","window", "1", "true", "fan", "2", "false"}
 
 
 ### Error messages
-
-TODO - describe the possible error messages that nodes can send in your system.
+<!--TODO - describe the possible error messages that nodes can send in your system. -->
 
 If the command or state is incorrect, the server should be notified about the error. If the data is incorrectly formatted,
 it should be rejected and an error should be thrown.
@@ -94,11 +127,9 @@ Error messages should be structured the same as normal messages however the comm
 The address field will still be the same, but the 3rd argument will be the error message in question
 
 ## An example scenario
-
-TODO - describe a typical scenario. How would it look like from communication perspective? When 
+<!-- TODO - describe a typical scenario. How would it look like from communication perspective? When 
 are connections established? Which packets are sent? How do nodes react on the packets? An 
-example scenario could be as follows:
-
+example scenario could be as follows:-->
 
 1. Server is started
 2. New node connects to the server. It has a temperature sensor, two humidity sensors and a window.
