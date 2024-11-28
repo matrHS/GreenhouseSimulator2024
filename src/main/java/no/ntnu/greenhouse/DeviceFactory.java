@@ -1,7 +1,5 @@
 package no.ntnu.greenhouse;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
@@ -61,9 +59,7 @@ public class DeviceFactory {
       addActuators(node, DeviceFactory.createHeater(node.getId()), heaterCount);
     }
     if (cameraCount > 0) {
-
       node.addCameras(DeviceFactory.createCamera(node.getId()), cameraCount);
-
     }
     return node;
   }

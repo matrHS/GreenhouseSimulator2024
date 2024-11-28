@@ -17,6 +17,11 @@ public class SensorActuatorNodeInfo {
     this.nodeId = nodeId;
   }
 
+  /**
+   * Add an actuator to the actuator collection.
+   *
+   * @param actuator The actuator to add
+   */
   public void addActuator(Actuator actuator) {
     actuators.add(actuator);
   }
@@ -46,7 +51,6 @@ public class SensorActuatorNodeInfo {
    * @return The actuator or null if none found
    */
   public Actuator getActuator(int actuatorId) {
-
     return actuators.get(actuatorId);
   }
 }

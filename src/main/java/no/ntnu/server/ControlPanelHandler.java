@@ -7,22 +7,20 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import no.ntnu.tools.Logger;
 import no.ntnu.tools.Config;
+import no.ntnu.tools.Logger;
 
 /**
  * The control panel handler class. This class is responsible for handling the communication between
  * the control panel and the server.
  */
 public class ControlPanelHandler extends Thread {
-
   private final Socket socket;
   private final String[] allowedCommands = new String[] {"set", "get", "add", "remove", "data",
                                                          "state", "update", "camera"};
   private ObjectOutputStream outputStream;
   private ObjectInputStream inputStream;
   private AtomicReference<String[]> cmdStack;
-
   private LinkedBlockingQueue<String[]> commandQueue;
   private Server server;
   private int socketAddress;
@@ -46,6 +44,7 @@ public class ControlPanelHandler extends Thread {
     this.commandQueue = new LinkedBlockingQueue<>();
     this.socketAddress = socket.getPort();
   }
+
   /**
    * The main run method of this handler.
    */
@@ -68,15 +67,12 @@ public class ControlPanelHandler extends Thread {
       } catch (SocketTimeoutException s) {
         processNextQueuedElement();
       } catch (IOException e) {
-        server.closeSocket(server.getCPMap(), this.socket);
+        server.closeSocket(server.getCpMap(), this.socket);
       } catch (ClassNotFoundException e) {
         Logger.error(e.toString());
       }
     }
-
   }
-
-
 
   /**
    * Processes all the commands on the atomic stack and then sends each command sequentially to the
@@ -84,14 +80,14 @@ public class ControlPanelHandler extends Thread {
    */
   private void processNextQueuedElement() {
     while (!commandQueue.isEmpty()) {
-      sendCommandToCP(commandQueue.poll());
+      sendCommandToCp(commandQueue.poll());
     }
   }
 
   /**
    * Writes all processed commands in the queue to the control panel.
    */
-  private void sendCommandToCP(String[] command) {
+  private void sendCommandToCp(String[] command) {
     try {
       outputStream.writeObject(command);
     } catch (IOException e) {

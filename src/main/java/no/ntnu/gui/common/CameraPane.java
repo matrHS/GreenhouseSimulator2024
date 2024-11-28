@@ -10,31 +10,42 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import no.ntnu.greenhouse.Camera;
-import no.ntnu.greenhouse.SensorReading;
 
-
+/**
+ * A section of GUI displaying camera data.
+ */
 public class CameraPane extends TitledPane {
-  private final List<SimpleStringProperty> cameras = new ArrayList<>();
   private final VBox contentBox = new VBox();
 
 
-  public CameraPane(List<Camera> cameras){
+  /**
+   * Create a camera pane.
+   *
+   * @param cameras The cameras data to display.
+   */
+  public CameraPane(List<Camera> cameras) {
     super();
     initialize(cameras.stream().map(Camera::getImage).toList());
   }
-  public CameraPane(){
+
+  /**
+   * Create a camera pane.
+   */
+  public CameraPane() {
     initialize(new LinkedList<>());
   }
 
+  /**
+   * Initialize the camera pane.
+   *
+   * @param images The camera data to display.
+   */
   private void initialize(Iterable<String> images) {
     setText("Cameras");
     images.forEach(image ->
@@ -67,13 +78,19 @@ public class CameraPane extends TitledPane {
     update(cameras.stream().map(Camera::getImage).toList());
   }
 
-  private Node createImageBox(String image){
+  /**
+   * Create a box containing an image.
+   *
+   * @param image The image to display
+   * @return The box containing the image
+   */
+  private Node createImageBox(String image) {
     byte[] imageBytes = Base64.getDecoder().decode(image);
     Image img = new Image(new ByteArrayInputStream(imageBytes));
     ImageView imageView = new ImageView(img);
     imageView.getStyleClass().add("camera-view");
 
-    HBox hbox =new HBox(imageView);
+    HBox hbox = new HBox(imageView);
     hbox.setAlignment(Pos.TOP_LEFT);
     return hbox;
   }

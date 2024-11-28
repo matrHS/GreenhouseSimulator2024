@@ -6,7 +6,6 @@ import java.util.List;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import no.ntnu.greenhouse.Sensor;
@@ -47,6 +46,12 @@ public class SensorPane extends TitledPane {
     initialize(sensors.stream().map(Sensor::getReading).toList(), title);
   }
 
+  /**
+   * Initialize the sensor pane.
+   *
+   * @param sensors The sensor data to display.
+   * @param title The title of the pane
+   */
   private void initialize(Iterable<SensorReading> sensors, String title) {
     setText(title);
     sensors.forEach(sensor ->
@@ -78,6 +83,12 @@ public class SensorPane extends TitledPane {
     update(sensors.stream().map(Sensor::getReading).toList());
   }
 
+  /**
+   * Create a sensor label for a sensor and remember it for later updates.
+   *
+   * @param sensor The sensor to create a label for
+   * @return The label created
+   */
   private Label createAndRememberSensorLabel(SensorReading sensor) {
     SimpleStringProperty props = new SimpleStringProperty(generateSensorText(sensor));
     sensorProps.add(props);
@@ -86,12 +97,24 @@ public class SensorPane extends TitledPane {
     return label;
   }
 
+  /**
+   * Generate the text to display for a sensor.
+   *
+   * @param sensor The sensor to generate the text for
+   * @return The text to display for the sensor
+   */
   private String generateSensorText(SensorReading sensor) {
     String sensorType = sensor.getType();
     sensorType = sensorType.substring(0, 1).toUpperCase() + sensorType.substring(1);
     return sensorType + ": " + sensor.getFormatted();
   }
 
+  /**
+   * Update a sensor label with new sensor data.
+   *
+   * @param sensor The new sensor data
+   * @param index The index of the sensor in the list
+   */
   private void updateSensorLabel(SensorReading sensor, int index) {
     if (sensorProps.size() > index) {
       SimpleStringProperty props = sensorProps.get(index);

@@ -17,31 +17,30 @@ import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CameraListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
-import no.ntnu.tools.RSA;
-import no.ntnu.tools.Logger;
 import no.ntnu.tools.Config;
+import no.ntnu.tools.Logger;
+import no.ntnu.tools.RSA;
 
 /**
  * The GreenhouseNode class is responsible for handling the communication between the greenhouse and
  * the server. It listens for commands from the server and sends sensor readings to the server.
  */
-public class GreenhouseNode extends TimerTask implements SensorListener, NodeStateListener, ActuatorListener,
+public class GreenhouseNode extends TimerTask
+    implements SensorListener, NodeStateListener, ActuatorListener,
     CameraListener {
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
+  private final BigInteger[] keys = this.keyGen();
   private ObjectInputStream objectInputStream;
   private ObjectOutputStream objectOutputStream;
   private Socket socket;
   private SensorActuatorNode node;
   private LinkedBlockingQueue<String[]> commandQueue;
-  private final BigInteger[] keys = this.keyGen();
   private boolean allowSendReading;
   private ArrayList<ArrayList<SensorReading>> aggregateReadings = new ArrayList<>();
 
 
   /**
    * Create a greenhouse node that should connect to specified TCP port of server.
-   *
-   *
    */
   public GreenhouseNode() {
   }
@@ -78,13 +77,10 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
       int windows = Integer.parseInt(args[2]);
       int fans = Integer.parseInt(args[3]);
       int heaters = Integer.parseInt(args[4]);
-      int cameras = Integer.parseInt(args[5]);
-      if (cameras>1){
-        cameras = 1;
-      }
-      createNode(temperature, humidity, windows, fans, heaters, cameras);
+
+      createNode(temperature, humidity, windows, fans, heaters, 1);
     } else {
-      createNode(1, 2, 1, 0, 0, 1);
+      createNode(1, 2, 1, 1, 1, 1);
       System.out.println("Greenhouse initialized with default sensors "
                          + "(1 temperature, 2 humidity, 1 window, 1 camera)");
     }
@@ -141,13 +137,12 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
    * Each node is defined as a greenhouse consisting of multiple sensors.
    */
   private void initiateCommunication() {
-    // TODO - here you can set up the TCP or UDP communication
     try {
       this.socket = new Socket(Config.SERVER_ADDRESS, Config.SERVER_PORT);
       socket.setSoTimeout(Config.TIMEOUT);
       this.objectInputStream = new ObjectInputStream(socket.getInputStream());
       this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-      String[] payload = nodeInfoForAddingNodesOnCPanel();
+      String[] payload = nodeInfoForAddingNodesOnControlPanel();
       payload[0] = "add";
       Logger.info("sending node info to server");
       this.objectOutputStream.writeObject(payload);
@@ -162,15 +157,13 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
    *
    * @return the node information
    */
-  private String[] nodeInfoForAddingNodesOnCPanel() {
+  private String[] nodeInfoForAddingNodesOnControlPanel() {
     String[] nodeInfo = new String[2 + node.getActuators().size() * 3];
-
     nodeInfo[1] = String.valueOf(socket.getLocalPort());
     int index = 2;
     for (Actuator actuator : this.node.getActuators()) {
       nodeInfo[index] = actuator.getType();
       nodeInfo[index + 1] = String.valueOf(actuator.getId());
-
       nodeInfo[index + 2] = String.valueOf(actuator.isOn());
       index = index + 3;
     }
@@ -191,7 +184,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
             Logger.info("Broadcasting set all actuators");
             node.getActuators()
                 .forEach(actuator -> node.setActuator(actuator.getId(),
-                    Boolean.parseBoolean(command[2])));
+                                                      Boolean.parseBoolean(command[2])));
           } else {
             node.setActuator(Integer.parseInt(command[1]), Boolean.parseBoolean(command[2]));
           }
@@ -206,7 +199,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
           }
           break;
         case "info":
-          String[] nodeInfo = nodeInfoForAddingNodesOnCPanel();
+          String[] nodeInfo = nodeInfoForAddingNodesOnControlPanel();
           nodeInfo[0] = "add";
           Logger.info("sending node info to server");
           this.setCommandQueue(nodeInfo);
@@ -220,9 +213,9 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
       Logger.error(e.toString());
     } catch (SocketTimeoutException e) {
     } catch (IOException e) {
-      Logger.error("failed to read");
+      Logger.error("Failed to read");
     } catch (ClassNotFoundException e) {
-      Logger.error("wrong type of object dumbass"); //TODO no profanities!
+      Logger.error("Wrong type of object");
     }
   }
 
@@ -271,6 +264,9 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     }
   }
 
+  /**
+   * Listens for commands from the server.
+   */
   private void listenForCommands() {
     try {
       socket.setSoTimeout(Config.TIMEOUT);
@@ -280,15 +276,25 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     }
   }
 
+  /**
+   * Sets the command queue for the greenhouse node.
+   *
+   * @param command The command to be added to the queue
+   */
   private void setCommandQueue(String[] command) {
     try {
-      String[] payload = RSA.encrypt(command,keys);
+      String[] payload = RSA.encrypt(command, keys);
       this.commandQueue.put(payload);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
   }
 
+  /**
+   * Listens for sensor updates.
+   *
+   * @param sensors A list of sensors having new values (readings)
+   */
   @Override
   public void sensorsUpdated(List<Sensor> sensors) {
     String[] readings = new String[sensors.size() + 2];
@@ -304,6 +310,11 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
 
   }
 
+  /**
+   * Listens for node state updates.
+   *
+   * @param node the node which is ready now
+   */
   @Override
   public void onNodeReady(SensorActuatorNode node) {
     node.addSensorListener(this);
@@ -311,11 +322,22 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     node.addCameraListener(this);
   }
 
+  /**
+   * Listens for node stop events.
+   *
+   * @param node the node which is stopped
+   */
   @Override
   public void onNodeStopped(SensorActuatorNode node) {
-
+    //TODO why empty?
   }
 
+  /**
+   * Updates the actuator state.
+   *
+   * @param nodeId   ID of the node on which this actuator is placed
+   * @param actuator The actuator that has changed its state
+   */
   @Override
   public void actuatorUpdated(int nodeId, Actuator actuator) {
     String[] payload = new String[4];
@@ -326,6 +348,11 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     this.setCommandQueue(payload);
   }
 
+  /**
+   * Listens for camera updates.
+   *
+   * @param cameras A list of cameras having new images
+   */
   @Override
   public void cameraUpdated(List<Camera> cameras) {
     String[] payload = new String[2 + cameras.size()];
@@ -337,6 +364,11 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     this.setCommandQueue(payload);
   }
 
+  /**
+   * Generates a public and private key for the greenhouse node.
+   *
+   * @return an array containing the private key, public key, and product of the two keys
+   */
   private BigInteger[] keyGen() {
     int p = 7;
     int q = 19;
@@ -345,10 +377,12 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     BigInteger pubKey = BigInteger.valueOf(29);
     BigInteger privKey = BigInteger.valueOf(41);
     return new BigInteger[] {privKey, pubKey, product};
-
   }
 
 
+  /**
+   * Aggregates the sensor readings and sends the average to the server.
+   */
   @Override
   public void run() {
     ArrayList<SensorReading> aggregate = new ArrayList<>();

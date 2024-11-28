@@ -23,12 +23,14 @@
     -fx-scale-x: 0.6;
     -fx-scale-y: 0.6;
 }
+
 .main-center-pane {
     -fx-alignment: center;
     -fx-background-color: rgba(194, 213, 187, 0.92);
     -fx-min-width: 800;
     -fx-padding: 5;
 }
+
 .actuators-buttons {
     -fx-background-color: rgba(194, 213, 187, 0.92);
     -fx-padding: 5;
@@ -37,6 +39,7 @@
     -fx-font-size: 14;
     -fx-font-weight: normal;
 }
+
 .button {
     -fx-min-height: 50;
     -fx-max-height: 50;
@@ -44,19 +47,22 @@
     -fx-max-width: 150;
 }
 
-.camera-scroll-pane{
+.camera-scroll-pane {
     -fx-padding: 2;
     -fx-min-height: 300;
 }
-.sensor-pane{
+
+.sensor-pane {
     -fx-padding: 5;
     -fx-min-height: 100;
 }
-.actuator-pane{
+
+.actuator-pane {
     -fx-padding: 5;
     -fx-min-height: 200;
 }
-.camera-view{
+
+.camera-view {
     -fx-scale-x: 1;
     -fx-scale-y: 1;
 

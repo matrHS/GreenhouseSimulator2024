@@ -15,7 +15,6 @@ import javafx.scene.layout.VBox;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.listeners.controlpanel.ActuatorChangedListener;
-import no.ntnu.tools.Logger;
 
 /**
  * A section of the GUI representing a list of actuators. Can be used both on the sensor/actuator
@@ -45,7 +44,7 @@ public class ActuatorPane extends TitledPane {
    * Create an actuator pane.
    *
    * @param actuators A list of actuators to display in the pane.
-   * @param listener A listener to be notified when an actuator is changed.
+   * @param listener  A listener to be notified when an actuator is changed.
    */
   public ActuatorPane(ActuatorCollection actuators, ActuatorChangedListener listener) {
     this(actuators);
@@ -56,11 +55,11 @@ public class ActuatorPane extends TitledPane {
    * Add the actuators to the GUI.
    *
    * @param actuators The actuators to add.
-   * @param parent The parent pane to add the actuators to.
+   * @param parent    The parent pane to add the actuators to.
    */
   private void addActuatorControls(ActuatorCollection actuators, Pane parent) {
     actuators.forEach(actuator ->
-        parent.getChildren().add(createActuatorGui(actuator))
+                          parent.getChildren().add(createActuatorGui(actuator))
     );
   }
 

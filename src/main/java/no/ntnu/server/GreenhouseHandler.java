@@ -14,10 +14,8 @@ import no.ntnu.tools.Config;
  */
 public class GreenhouseHandler extends Thread {
   private final Socket socket;
-
   private ObjectInputStream inputStream;
   private ObjectOutputStream outputStream;
-
   private LinkedBlockingQueue<String[]> commandQueue;
   private Server server;
   private int socketAddress;

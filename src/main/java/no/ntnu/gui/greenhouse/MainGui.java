@@ -47,7 +47,6 @@ public class MainGui {
   }
 
 
-
   /**
    * Create the center pane for the application.
    *
@@ -61,13 +60,11 @@ public class MainGui {
               "/images/GreenhouseMain.jpg")).toExternalForm());
       ImageView mainImage = new ImageView(greenhouseDrawing);
 
-
       centerPane.getChildren().add(mainImage);
       centerPane.setAlignment(Pos.CENTER);
     } catch (Exception e) {
       System.out.println("error:" + e.getMessage());
     }
-
     return centerPane;
 
   }

@@ -33,11 +33,6 @@ public class Server {
    * Main method for the server.
    */
   public static void main(String[] args) {
-//    String[] hello = new String[]{"hello"};
-//    String[] encryptedHello = Config.encrypt(hello);
-//    Logger.info(encryptedHello[0]);
-//    hello = Config.decrypt(encryptedHello);
-//    Logger.info(hello[0]);
     Server server = new Server();
     server.run();
 
@@ -93,7 +88,7 @@ public class Server {
    *
    * @return Map of connected control panels
    */
-  public HashMap getCPMap() {
+  public HashMap getCpMap() {
     return this.controlPanels;
   }
 
@@ -114,11 +109,10 @@ public class Server {
     Logger.info("server starting");
     Logger.info("Running on port: " + serverSocket.getLocalPort());
     while (true) {
-
       Socket socket = acceptNextClient();
       Logger.info("Connected to: " + socket.getPort());
       Logger.info("holding sockets for: " + greenHouseSockets.keySet() + " and "
-          + controlPanels.keySet());
+                  + controlPanels.keySet());
     }
   }
 
@@ -154,13 +148,13 @@ public class Server {
 
       if (type.equals("cp")) {
         ControlPanelHandler handler = new ControlPanelHandler(socket, outputStream, inputStream,
-            this);
+                                                              this);
         controlPanels.put(socket.getPort(), handler);
         handler.start();
         Logger.info("new control panel connected");
         this.putCommandNode(new String[] {"info", "-1"}, -1);
-      } else {
 
+      } else {
         GreenhouseHandler handler = new GreenhouseHandler(socket, outputStream, inputStream, this);
         greenHouseSockets.put(socket.getPort(), handler);
         handler.start();
@@ -175,6 +169,5 @@ public class Server {
     }
     return socket;
   }
-
 
 }

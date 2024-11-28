@@ -1,6 +1,7 @@
 package no.ntnu.gui.controlpanel;
 
 import static javafx.application.Platform.exit;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,12 +9,10 @@ import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -51,7 +50,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private final Map<Integer, SensorPane> sensorPanes = new HashMap<>();
   private final Map<Integer, SensorPane> aggregatePanes = new HashMap<>();
   private final Map<Integer, ActuatorPane> actuatorPanes = new HashMap<>();
-  private final Map <Integer, CameraPane> cameraPanes = new HashMap<>();
+  private final Map<Integer, CameraPane> cameraPanes = new HashMap<>();
   private final Map<Integer, SensorActuatorNodeInfo> nodeInfos = new HashMap<>();
   private final Map<Integer, Tab> nodeTabs = new HashMap<>();
   private HBox mainPane;
@@ -127,7 +126,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     scene.getStylesheets().add(getClass().getResource("/css/stylesheet.css").toExternalForm());
     stage.getIcons().add(new Image(
         Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
-            .toExternalForm()));
+               .toExternalForm()));
     stage.setScene(scene);
     stage.setResizable(false);
     stage.show();
@@ -290,6 +289,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     }
   }
 
+  /**
+   * Handle the event when new aggregate sensor data is received from a node.
+   *
+   * @param nodeId  ID of the node
+   * @param sensors List of all current sensor values
+   */
   @Override
   public void onAggregateSensorData(int nodeId, List<SensorReading> sensors) {
     Logger.info("1 minute aggregate data from greenhouse " + nodeId);
@@ -338,7 +343,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    * @return The created node tab
    */
   private Tab createNodeTab(SensorActuatorNodeInfo nodeInfo) {
-    Tab tab = new Tab("Greenhouse " + nodeInfo.getId());
 
     SensorPane sensorPane = createEmptySensorPane("Sensors");
     sensorPanes.put(nodeInfo.getId(), sensorPane);
@@ -361,14 +365,15 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     greenhuose.setMaxWidth(bounds.getWidth());
     ScrollPane scrollPane = new ScrollPane(greenhuose);
     scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-    tab.setContent(scrollPane);
 
+    Tab tab = new Tab("Greenhouse " + nodeInfo.getId());
+    tab.setContent(scrollPane);
     nodeTabs.put(nodeInfo.getId(), tab);
     return tab;
   }
 
   /**
-   * Put a command on the queue
+   * Put a command on the queue.
    *
    * @param payload The command to put on the queue
    */
