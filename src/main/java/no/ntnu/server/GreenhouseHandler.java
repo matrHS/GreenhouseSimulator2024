@@ -6,7 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
-import no.ntnu.tools.SocketTimeout;
+import no.ntnu.tools.Config;
 
 /**
  * The greenhouse handler class. This class
@@ -36,8 +36,9 @@ public class GreenhouseHandler extends Thread {
       this.inputStream = inputStream;
       this.commandQueue = new LinkedBlockingQueue<>();
       this.server = server;
-      socket.setSoTimeout(SocketTimeout.timeout);
       this.socketAddress = socket.getPort();
+      socket.setSoTimeout(Config.TIMEOUT);
+
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
