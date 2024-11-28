@@ -19,7 +19,7 @@ import no.ntnu.tools.Logger;
 /**
  * Represents one node with sensors and actuators.
  */
-public class SensorActuatorNode implements ActuatorListener, CommunicationChannelListener {
+public class SensorActuatorNode extends TimerTask implements ActuatorListener, CommunicationChannelListener {
 
   // How often to generate new sensor values, in seconds.
   private static final long SENSING_DELAY = 5000;
@@ -153,6 +153,8 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
       startPeriodicSensorReading();
       running = true;
       notifyStateChanges(true);
+      Timer imageTimer = new Timer();
+      imageTimer.scheduleAtFixedRate(this, 5000, 30000);
     }
   }
 
@@ -202,8 +204,6 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     Logger.infoNoNewline("Node #" + id);
     addRandomNoiseToSensors();
     notifySensorChanges();
-    addRandomImageToCameras();
-    notifyCameraChanges();
     debugPrint();
   }
 
@@ -215,9 +215,9 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
 
   //TODO 
   private void addRandomImageToCameras(){
-    for (Camera camera : cameras){
-      camera = DeviceFactory.createCamera(camera.getNodeId());
-    }
+    cameras.clear();
+    cameras.add(DeviceFactory.createCamera(1));
+
   }
 
   private void debugPrint() {
@@ -272,6 +272,7 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
   }
 
   private void notifyCameraChanges(){
+    addRandomImageToCameras();
     for (CameraListener listener : cameraListeners){
       listener.cameraUpdated(cameras);
     }
@@ -362,5 +363,11 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     for (Actuator actuator : actuators) {
       actuator.set(on);
     }
+  }
+
+  @Override
+  public void run() {
+    System.out.println("Running scheduled task");
+    notifyCameraChanges();
   }
 }

@@ -3,7 +3,9 @@ package no.ntnu.greenhouse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Base64;
+import java.util.Random;
 import no.ntnu.tools.Logger;
 
 /**
@@ -92,17 +94,18 @@ public class DeviceFactory {
 
   /**
    * Create a typical camera.
+   * TODO: Move this to camera instead of factory as instantiating cameras is not good
    *
    * @param nodeId ID of the node to which this camera will be connected
    * @return The camera
    */
   public static Camera createCamera(int nodeId) {
-    int random = (int) (Math.random() * 5) + 1;
+    int random = new Random().nextInt(5) + 1;
+    System.out.println("random: " + random);
     String imageFileName = "/images/webcamera" + random + ".jpg";
-    File fi = new File(DeviceFactory.class.getResource(imageFileName).getPath());
     byte[] fileContent;
     String stringImage = "";
-    try (FileInputStream fis = new FileInputStream(fi)) {
+    try (InputStream fis = DeviceFactory.class.getResourceAsStream(imageFileName)) {
       fileContent = fis.readAllBytes();
       stringImage = Base64.getEncoder().encodeToString(fileContent);
     } catch (IOException e) {
