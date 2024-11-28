@@ -14,7 +14,6 @@ public class Actuator {
   private final int nodeId;
   private final int id;
   private Map<String, Double> impacts = new HashMap<>();
-
   private ActuatorListener listener;
 
   private boolean on;
@@ -46,6 +45,11 @@ public class Actuator {
     this.id = id;
   }
 
+  /**
+   * Generate a unique ID for the actuator.
+   *
+   * @return A unique ID
+   */
   private static int generateUniqueId() {
     return nextId++;
   }
@@ -73,6 +77,11 @@ public class Actuator {
     impacts.put(sensorType, diffWhenActive);
   }
 
+  /**
+   * Get the type of the actuator.
+   *
+   * @return The type of the actuator
+   */
   public String getType() {
     return type;
   }
@@ -98,6 +107,9 @@ public class Actuator {
     notifyChanges();
   }
 
+  /**
+   * Notify the listener that the actuator has changed.
+   */
   private void notifyChanges() {
     if (listener != null) {
       listener.actuatorUpdated(this.nodeId, this);
@@ -129,6 +141,11 @@ public class Actuator {
     }
   }
 
+  /**
+   * Get the string representation of the actuator.
+   *
+   * @return A string representation of the actuator
+   */
   @Override
   public String toString() {
     return "Actuator{"

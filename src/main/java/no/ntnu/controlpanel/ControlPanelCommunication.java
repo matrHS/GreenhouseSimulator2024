@@ -10,23 +10,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.tools.ControlPanelLogger;
 import no.ntnu.tools.RSA;
 import no.ntnu.tools.Config;
+import no.ntnu.tools.Logger;
 
 /**
  * The communication channel for the control panel. It communicates with the server and sends
  */
 public class ControlPanelCommunication extends Thread implements CommunicationChannel {
   private final ControlPanelLogic logic;
+  private final BigInteger[] keys = this.keyGen();
   private ObjectInputStream inputStream;
   private ObjectOutputStream outputStream;
   private Socket socket;
   private LinkedBlockingQueue<String[]> commandQueue;
-
-  private final BigInteger[] keys = this.keyGen();
   private ControlPanelLogger logger = ControlPanelLogger.getInstance();
+
 
   /**
    * Constructor for the ControlPanelCommunication.
@@ -37,6 +39,13 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     this.logic = logic;
   }
 
+  /**
+   * Sends a command to the server.
+   *
+   * @param nodeId     ID of the node to which the actuator is attached
+   * @param actuatorId Node-wide unique ID of the actuator
+   * @param isOn       When true, actuator must be turned on; off when false.
+   */
   @Override
   public void sendActuatorChange(int nodeId, int actuatorId, boolean isOn) {
     String[] payload = new String[3];
@@ -45,12 +54,11 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     payload[2] = Boolean.toString(isOn);
     try {
 
-      outputStream.writeObject(RSA.encrypt(payload,keys));
+      outputStream.writeObject(RSA.encrypt(payload, keys));
     } catch (IOException e) {
       logger.error("Failed to send actuator change");
     }
   }
-
 
   @Override
   public boolean open() {
@@ -96,12 +104,31 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   }
 
   /**
+   * Handles the readings from the sensor. The readings are split by comma and the type,
+   * value and unit are extracted.
+   *
+   * @param cameraReading The readings from the sensor
+   * @return A list of sensor readings
+   */
+  private List<Camera> handleCameras(String[] cameraReading) {
+    List<Camera> list = new ArrayList<>();
+    if (cameraReading.length >= 3) {
+      for (int i = 2; i < cameraReading.length; i++) {
+        String image = cameraReading[i];
+        int id = Integer.parseInt(cameraReading[1]);
+        list.add(new Camera(id, image));
+      }
+    }
+    return list;
+  }
+
+  /**
    * Handles the payload from the server. The payload is split by comma and the type is extracted.
    *
    * @param object The object from the server
    */
   private void handlePayload(Object object) {
-    String[] payload = (object instanceof String[]) ? RSA.decrypt((String[])object, keys) : null;
+    String[] payload = (object instanceof String[]) ? RSA.decrypt((String[]) object, keys) : null;
 
     if (payload != null) {
       switch (payload[0]) {
@@ -111,7 +138,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
               new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
           for (int i = 2; i < payload.length; i += 3) {
             Actuator actuator = new Actuator(Integer.parseInt(payload[i + 1]), payload[i],
-                Integer.parseInt(payload[1]));
+                                             Integer.parseInt(payload[1]));
             Boolean state = Boolean.parseBoolean(payload[i + 2]);
             actuator.set(state);
 
@@ -138,8 +165,13 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
 
         case "update":
           break;
+
         case "aggregate":
           logic.onAggregateSensorData(Integer.parseInt(payload[1]), handleReadings(payload));
+          break;
+
+        case "camera":
+          logic.onImageSensor(Integer.parseInt(payload[1]), handleCameras(payload));
           break;
 
         default:
@@ -148,6 +180,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     }
   }
 
+  /**
+   * Sends a command to the server if it exists.
+   */
   private void sendCommandIfExists() {
     while (this.commandQueue.peek() != null) {
       try {
@@ -194,6 +229,11 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     }
   }
 
+  /**
+   * Sets the command queue for the control panel communication.
+   *
+   * @param commandQueue The command queue
+   */
   public void setCommandQueue(LinkedBlockingQueue<String[]> commandQueue) {
     this.commandQueue = commandQueue;
   }
@@ -222,6 +262,12 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     sentActuatorToggle(-1, -1);
   }
 
+  /**
+   * Send actuator toggle change to the server.
+   *
+   * @param nodeId   The node ID
+   * @param actuatorId The actuator ID
+   */
   private void sentActuatorToggle(int nodeId, int actuatorId) {
     String[] payload = new String[2];
     payload[0] = "toggle";
@@ -233,13 +279,18 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     }
   }
 
-  private BigInteger[] keyGen(){
+  /**
+   * Generates the RSA keys for the communication.
+   *
+   * @return The RSA keys
+   */
+  private BigInteger[] keyGen() {
     int p = 7;
     int q = 19;
-    BigInteger product = BigInteger.valueOf(p*q);
-    int totient = (p-1)*(q-1);
+    BigInteger product = BigInteger.valueOf(p * q);
+    int totient = (p - 1) * (q - 1);
     BigInteger pubKey = BigInteger.valueOf(29);
     BigInteger privKey = BigInteger.valueOf(41);
-    return new BigInteger[]{privKey,pubKey,product};
+    return new BigInteger[] {privKey, pubKey, product};
   }
 }

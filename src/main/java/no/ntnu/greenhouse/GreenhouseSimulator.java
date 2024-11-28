@@ -34,6 +34,9 @@ public class GreenhouseSimulator {
     this.fake = fake;
   }
 
+  /**
+   * Create a greenhouse simulator.
+   */
   public GreenhouseSimulator() {
     this.fake = false;
   }
@@ -48,11 +51,22 @@ public class GreenhouseSimulator {
     Logger.info("Greenhouse initialized");
   }
 
+  /**
+   * Create a greenhouse with a specific configuration.
+   *
+   * @param temperature The temperature of the greenhouse
+   * @param humidity    The humidity of the greenhouse
+   * @param windows     The number of windows in the greenhouse
+   * @param fans        The number of fans in the greenhouse
+   * @param heaters     The number of heaters in the greenhouse
+   * @param cameras     The number of cameras in the greenhouse
+   */
   // TODO: Refactor into separate NODE class. Separate all node functionality to its own class
-  private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
+  private void createNode(int temperature, int humidity, int windows, int fans, int heaters,
+                          int cameras) {
     initiateCommunication();
     SensorActuatorNode node = DeviceFactory.createNode(
-        temperature, humidity, windows, fans, heaters);
+        temperature, humidity, windows, fans, heaters, cameras);
     nodes.put(node.getId(), node);
   }
 
@@ -66,6 +80,9 @@ public class GreenhouseSimulator {
     Logger.info("Simulator started");
   }
 
+  /**
+   * Initialize communication between the greenhouse and the server.
+   */
   private void initiateCommunication() {
     if (fake) {
       initiateFakePeriodicSwitches();
@@ -79,7 +96,6 @@ public class GreenhouseSimulator {
    * Each node is defined as a greenhouse consisting of multiple sensors.
    */
   private void initiateRealCommunication() {
-    // TODO - here you can set up the TCP or UDP communication
     try {
       this.socket = new Socket(Config.SERVER_ADDRESS, Config.SERVER_PORT);
       objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -94,6 +110,9 @@ public class GreenhouseSimulator {
     }
   }
 
+  /**
+   * Initialize fake periodic switches.
+   */
   private void initiateFakePeriodicSwitches() {
     periodicSwitches.add(new PeriodicSwitch("Window DJ", nodes.get(1), 2, 20000));
     periodicSwitches.add(new PeriodicSwitch("Heater DJ", nodes.get(2), 7, 8000));
@@ -109,6 +128,9 @@ public class GreenhouseSimulator {
     }
   }
 
+  /**
+   * Stop the communication between the greenhouse and the server.
+   */
   private void stopCommunication() {
     if (fake) {
       for (PeriodicSwitch periodicSwitch : periodicSwitches) {
@@ -135,7 +157,4 @@ public class GreenhouseSimulator {
     }
   }
 
-  public Map<Integer, SensorActuatorNode> getNodes() {
-    return nodes;
-  }
 }

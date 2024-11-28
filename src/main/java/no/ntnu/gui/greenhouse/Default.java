@@ -47,7 +47,7 @@ public class Default {
   public static Scene defaultScene(Parent root) {
     Screen screen = Screen.getPrimary();
     Rectangle2D bounds = screen.getVisualBounds();
-    Scene scene = new Scene(root, bounds.getMinX(), bounds.getMinY());
+    Scene scene = new Scene(root, 800, 700);
     return scene;
   }
 }

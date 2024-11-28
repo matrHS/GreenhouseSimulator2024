@@ -9,25 +9,28 @@ import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.ControlPanelCommunication;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.gui.common.ActuatorPane;
+import no.ntnu.gui.common.CameraPane;
 import no.ntnu.gui.common.SensorPane;
 import no.ntnu.gui.greenhouse.Default;
 import no.ntnu.gui.greenhouse.MainGuiController;
@@ -35,6 +38,7 @@ import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.controlpanel.ActuatorChangedListener;
 import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
 import no.ntnu.tools.ControlPanelLogger;
+import no.ntnu.tools.Logger;
 
 /**
  * Run a control panel with a graphical user interface (GUI), with JavaFX.
@@ -47,6 +51,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private final Map<Integer, SensorPane> sensorPanes = new HashMap<>();
   private final Map<Integer, SensorPane> aggregatePanes = new HashMap<>();
   private final Map<Integer, ActuatorPane> actuatorPanes = new HashMap<>();
+  private final Map<Integer, CameraPane> cameraPanes = new HashMap<>();
   private final Map<Integer, SensorActuatorNodeInfo> nodeInfos = new HashMap<>();
   private final Map<Integer, Tab> nodeTabs = new HashMap<>();
   private HBox mainPane;
@@ -77,22 +82,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
   /**
-   * Create an empty content for the application.
-   *
-   * @return The empty content
-   */
-  private static Label createEmptyContent() {
-    Label l = new Label("Waiting for node data...");
-    l.setAlignment(Pos.CENTER);
-    return l;
-  }
-
-  /**
    * Create an empty sensor pane for the application.
    *
    * @return The empty sensor pane
    */
   private static SensorPane createEmptySensorPane(String title) {
+
     return new SensorPane(title);
   }
 
@@ -126,6 +121,85 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
   /**
+   * Set the scene for the application.
+   *
+   * @param scene The scene to set
+   */
+  public void setScene(Scene scene) {
+    scene.getStylesheets().add(getClass().getResource("/css/stylesheet.css").toExternalForm());
+    stage.getIcons().add(new Image(
+        Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
+               .toExternalForm()));
+    stage.setScene(scene);
+    stage.setResizable(false);
+    stage.show();
+    Logger.info("GUI subscribes to lifecycle events");
+  }
+
+  /**
+   * Creates the tab pane for the application.
+   *
+   * @return The tab pane for the application.
+   */
+  private BorderPane setMainPage() {
+    try {
+      this.tabPane = new TabPane(controller.getHomeTab());
+      tabPane.getStyleClass().add("tab-pane");
+      tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+
+      BorderPane root = new BorderPane();
+      VBox headerPane = Default.setHeader(this.controller);
+      root.setTop(headerPane);
+      root.setCenter(tabPane);
+      root.setBottom(createBottomPane());
+      return root;
+    } catch (Exception e) {
+      Logger.error("Error: " + e.getMessage());
+    }
+    return null;
+  }
+
+  /**
+   * Create the bottom pane for the application.
+   * This pane contains buttons to open, close and toggle actuators.
+   *
+   * @return The bottom pane for the application
+   */
+  private Node createBottomPane() {
+
+    HBox bottomPane = new HBox();
+    bottomPane.getStyleClass().add("actuators-buttons");
+
+    Button openActuators = new Button("Open Actuators");
+    Button closeActuators = new Button("Close Actuators");
+    Button toggleActuators = new Button("Toggle Actuators");
+
+    openActuators.setOnAction(e -> channel.openActuators());
+    closeActuators.setOnAction(e -> channel.closeActuators());
+    toggleActuators.setOnAction(e -> channel.toggleActuators());
+
+    bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
+
+    return bottomPane;
+  }
+
+  /**
+   * Get the stored actuator.
+   *
+   * @param nodeId     The node ID
+   * @param actuatorId The actuator ID
+   * @return The stored actuator
+   */
+  private Actuator getStoredActuator(int nodeId, int actuatorId) {
+    Actuator actuator = null;
+    SensorActuatorNodeInfo nodeInfo = nodeInfos.get(nodeId);
+    if (nodeInfo != null) {
+      actuator = nodeInfo.getActuator(actuatorId);
+    }
+    return actuator;
+  }
+
+  /**
    * Handle the event when a node is added.
    *
    * @param nodeInfo Information about the added node
@@ -156,73 +230,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
   /**
-   * Set the scene for the application.
-   *
-   * @param scene The scene to set
-   */
-  public void setScene(Scene scene) {
-    scene.getStylesheets().add(getClass().getResource("/css/stylesheet.css").toExternalForm());
-    this.stage.setMaximized(true);
-    stage.getIcons().add(new Image(
-        Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
-            .toExternalForm()));
-    stage.setScene(scene);
-    stage.show();
-    logger.info("GUI subscribes to lifecycle events");
-  }
-
-  /**
-   * Creates the tab pane for the application.
-   *
-   * @return The tab pane for the application.
-   */
-  private BorderPane setMainPage() {
-    try {
-
-
-      this.tabPane = new TabPane(controller.getHomeTab());
-      tabPane.getStyleClass().add("tab-pane");
-      tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-
-      BorderPane root = new BorderPane();
-      VBox headerPane = Default.setHeader(this.controller);
-      VBox top = new VBox(headerPane, tabPane);
-      root.setTop(headerPane);
-      root.setCenter(tabPane);
-      root.setBottom(createBottomPane());
-      return root;
-    } catch (Exception e) {
-      logger.error("Error: " + e.getMessage());
-    }
-    return null;
-  }
-
-  /**
-   * Create the bottom pane for the application.
-   * This pane contains buttons to open, close and toggle actuators.
-   *
-   * @return The bottom pane for the application
-   */
-  private Node createBottomPane() {
-
-    HBox bottomPane = new HBox();
-    bottomPane.getStyleClass().add("bottom-pane");
-
-    Button openActuators = new Button("Open Actuators");
-    Button closeActuators = new Button("Close Actuators");
-    Button toggleActuators = new Button("Toggle Actuators");
-
-    openActuators.setOnAction(e -> channel.openActuators());
-    closeActuators.setOnAction(e -> channel.closeActuators());
-    toggleActuators.setOnAction(e -> channel.toggleActuators());
-
-    bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
-
-
-    return bottomPane;
-  }
-
-  /**
    * Handle the event when new sensor data is received from a node.
    *
    * @param nodeId  ID of the node
@@ -236,6 +243,23 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       sensorPane.update(sensors);
     } else {
       logger.error("No sensor section for greenhouse " + nodeId);
+    }
+  }
+
+  /**
+   * Handle the event when new images from camera is received from a node.
+   *
+   * @param nodeId  ID of the node
+   * @param cameras List of all current cameras
+   */
+  @Override
+  public void onImageSensor(int nodeId, List<Camera> cameras) {
+    Logger.info("Image data from greenhouse " + nodeId);
+    CameraPane cameraPane = cameraPanes.get(nodeId);
+    if (cameraPane != null) {
+      cameraPane.update(cameras);
+    } else {
+      Logger.error("No camera section for greenhouse " + nodeId);
     }
   }
 
@@ -268,6 +292,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     }
   }
 
+  /**
+   * Handle the event when new aggregate sensor data is received from a node.
+   *
+   * @param nodeId  ID of the node
+   * @param sensors List of all current sensor values
+   */
   @Override
   public void onAggregateSensorData(int nodeId, List<SensorReading> sensors) {
     logger.info("1 minute aggregate data from greenhouse " + nodeId);
@@ -280,22 +310,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
   /**
-   * Get the stored actuator.
-   *
-   * @param nodeId     The node ID
-   * @param actuatorId The actuator ID
-   * @return The stored actuator
-   */
-  private Actuator getStoredActuator(int nodeId, int actuatorId) {
-    Actuator actuator = null;
-    SensorActuatorNodeInfo nodeInfo = nodeInfos.get(nodeId);
-    if (nodeInfo != null) {
-      actuator = nodeInfo.getActuator(actuatorId);
-    }
-    return actuator;
-  }
-
-  /**
    * Forget the node info.
    *
    * @param nodeId The node ID to forget
@@ -304,28 +318,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     sensorPanes.remove(nodeId);
     actuatorPanes.remove(nodeId);
     nodeInfos.remove(nodeId);
-  }
-
-  /**
-   * Add a node.
-   *
-   * @param nodeInfo Information about the added node
-   */
-  private void addNode(SensorActuatorNodeInfo nodeInfo) {
-    if (nodeInfos.get(nodeInfo.getId()) == null) {
-      nodeInfos.put(nodeInfo.getId(), nodeInfo);
-
-    } else {
-      logger.info("Duplicate node spawned, ignore it");
-    }
-  }
-
-  /**
-   * Reload the center pane.
-   */
-  private void reloadCenterPane() {
-    mainPane.getChildren().clear();
-    mainPane.getChildren().add(setMainPage());
   }
 
   /**
@@ -354,16 +346,46 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    * @return The created node tab
    */
   private Tab createNodeTab(SensorActuatorNodeInfo nodeInfo) {
-    Tab tab = new Tab("Node " + nodeInfo.getId());
+
     SensorPane sensorPane = createEmptySensorPane("Sensors");
     sensorPanes.put(nodeInfo.getId(), sensorPane);
+
     ActuatorPane actuatorPane = new ActuatorPane(nodeInfo.getActuators(), this);
     actuatorPanes.put(nodeInfo.getId(), actuatorPane);
+
+    CameraPane cameraPane = new CameraPane();
+    cameraPanes.put(nodeInfo.getId(), cameraPane);
+
     SensorPane aggregatePane = new SensorPane("1 minute average");
     aggregatePanes.put(nodeInfo.getId(), aggregatePane);
-    tab.setContent(new VBox(sensorPane, actuatorPane, aggregatePane));
+
+    VBox greenhuose = new VBox(sensorPane, actuatorPane, cameraPane, aggregatePane);
+    greenhuose.setMaxWidth(700);
+    greenhuose.setMinWidth(700);
+    Screen screen = Screen.getPrimary();
+    Rectangle2D bounds = screen.getVisualBounds();
+    greenhuose.setMinWidth(bounds.getWidth());
+    greenhuose.setMaxWidth(bounds.getWidth());
+    ScrollPane scrollPane = new ScrollPane(greenhuose);
+    scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+    Tab tab = new Tab("Greenhouse " + nodeInfo.getId());
+    tab.setContent(scrollPane);
     nodeTabs.put(nodeInfo.getId(), tab);
     return tab;
+  }
+
+  /**
+   * Put a command on the queue.
+   *
+   * @param payload The command to put on the queue
+   */
+  private void putOnCommandQueue(String[] payload) {
+    try {
+      commandQueue.put(payload);
+    } catch (InterruptedException e) {
+      Logger.info("failed to put command on queue.");
+    }
   }
 
   /**
@@ -374,16 +396,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     logger.info("Communication closed, closing the GUI");
     Platform.runLater(Platform::exit);
   }
-
-
-  private void putOnCommandQueue(String[] payload) {
-    try {
-      commandQueue.put(payload);
-    } catch (InterruptedException e) {
-      logger.info("failed to put command on queue.");
-    }
-  }
-
 
   /**
    * Handle the event when an actuator is changed.
@@ -401,6 +413,9 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     putOnCommandQueue(payload);
   }
 
+  /**
+   * Stop the application.
+   */
   @Override
   public void stop() {
     // This code is reached only after the GUI-window is closed

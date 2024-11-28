@@ -61,6 +61,12 @@ public class ControlPanelStarter {
     return new ControlPanelCommunication(logic);
   }
 
+  /**
+   * Emulate fake events.
+   *
+   * @param logic The logic object to which the events should be sent
+   * @return The communication channel that was created
+   */
   private CommunicationChannel initiateFakeSpawner(ControlPanelLogic logic) {
     // Here we pretend that some events will be received with a given delay
     FakeCommunicationChannel spawner = new FakeCommunicationChannel(logic);

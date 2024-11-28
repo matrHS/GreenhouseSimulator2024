@@ -3,6 +3,7 @@ package no.ntnu.controlpanel;
 import java.util.LinkedList;
 import java.util.List;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
@@ -56,41 +57,87 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
     }
   }
 
+  /**
+   * Event handler for a new node added to the network.
+   *
+   * @param nodeInfo Information about the added node
+   */
   @Override
   public void onNodeAdded(SensorActuatorNodeInfo nodeInfo) {
     listeners.forEach(listener -> listener.onNodeAdded(nodeInfo));
   }
 
+  /**
+   * Event handler for a node removed from the network.
+   *
+   * @param nodeId The ID of the removed node
+   */
   @Override
   public void onNodeRemoved(int nodeId) {
     listeners.forEach(listener -> listener.onNodeRemoved(nodeId));
   }
 
+  /**
+   * Event handler for sensor data received from a node.
+   *
+   * @param nodeId  The ID of the node
+   * @param sensors The sensor readings
+   */
   @Override
   public void onSensorData(int nodeId, List<SensorReading> sensors) {
     listeners.forEach(listener -> listener.onSensorData(nodeId, sensors));
   }
 
+  /**
+   * Event handler for camera sensor data received from a node.
+   *
+   * @param nodeId  ID of the node
+   * @param cameras List of all current cameras
+   */
+  @Override
+  public void onImageSensor(int nodeId, List<Camera> cameras) {
+    listeners.forEach(listener -> listener.onImageSensor(nodeId, cameras));
+  }
+
+  /**
+   * Event handler for actuator state change.
+   *
+   * @param nodeId     ID of the node to which the actuator is attached
+   * @param actuatorId ID of the actuator
+   * @param isOn       When true, actuator is on; off when false.
+   */
   @Override
   public void onActuatorStateChanged(int nodeId, int actuatorId, boolean isOn) {
     listeners.forEach(listener -> listener.onActuatorStateChanged(nodeId, actuatorId, isOn));
   }
 
+  /**
+   * Event handler for aggregated sensor data received from a node.
+   *
+   * @param nodeId  ID of the node
+   * @param sensors List of all current sensor values
+   */
   @Override
   public void onAggregateSensorData(int nodeId, List<SensorReading> sensors) {
     listeners.forEach(listener -> listener.onAggregateSensorData(nodeId, sensors));
   }
 
+  /**
+   * Event handler for actuator updated.
+   *
+   * @param nodeId   ID of the node on which this actuator is placed
+   * @param actuator The actuator that has changed its state
+   */
   @Override
   public void actuatorUpdated(int nodeId, Actuator actuator) {
-    //    if (communicationChannel != null) {
-    //      communicationChannel.sendActuatorChange(nodeId, actuator.getId(), actuator.isOn());
-    //    }
     listeners.forEach(listener ->
-        listener.onActuatorStateChanged(nodeId, actuator.getId(), actuator.isOn())
+                          listener.onActuatorStateChanged(nodeId, actuator.getId(), actuator.isOn())
     );
   }
 
+  /**
+   * Event handler for communication channel closed.
+   */
   @Override
   public void onCommunicationChannelClosed() {
     logger.info("Communication closed, updating logic...");

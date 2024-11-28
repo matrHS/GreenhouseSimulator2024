@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import no.ntnu.listeners.common.ActuatorListener;
+import no.ntnu.listeners.common.CameraListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
@@ -14,17 +15,19 @@ import no.ntnu.tools.Logger;
 /**
  * Represents one node with sensors and actuators.
  */
-public class SensorActuatorNode implements ActuatorListener, CommunicationChannelListener {
+public class SensorActuatorNode extends TimerTask
+    implements ActuatorListener, CommunicationChannelListener {
+
   // How often to generate new sensor values, in seconds.
   private static final long SENSING_DELAY = 5000;
   private final int id;
-
   private final List<Sensor> sensors = new LinkedList<>();
   private final ActuatorCollection actuators = new ActuatorCollection();
-
+  private final List<Camera> cameras = new LinkedList<>();
   private final List<SensorListener> sensorListeners = new LinkedList<>();
   private final List<ActuatorListener> actuatorListeners = new LinkedList<>();
   private final List<NodeStateListener> stateListeners = new LinkedList<>();
+  private final List<CameraListener> cameraListeners = new LinkedList<>();
   private final Random random = new Random();
   Timer sensorReadingTimer;
   private boolean running;
@@ -75,6 +78,21 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
   }
 
   /**
+   * Add cameras to the node.
+   *
+   * @param camera The camera to add
+   * @param n      The number of cameras to add
+   */
+  public void addCameras(Camera camera, int n) {
+    if (n <= 0) {
+      throw new IllegalArgumentException("Can't add a negative number of cameras");
+    }
+    for (int i = 0; i < n; i++) {
+      cameras.add(camera);
+    }
+  }
+
+  /**
    * Add an actuator to the node.
    *
    * @param actuator The actuator to add
@@ -108,6 +126,17 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
   }
 
   /**
+   * Register a new listener for camera updates.
+   *
+   * @param listener The listener which will get notified every time actuator state changes.
+   */
+  public void addCameraListener(CameraListener listener) {
+    if (!cameraListeners.contains(listener)) {
+      cameraListeners.add(listener);
+    }
+  }
+
+  /**
    * Register a new listener for node state updates.
    *
    * @param listener The listener which will get notified when the state of this node changes
@@ -127,6 +156,8 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
       startPeriodicSensorReading();
       running = true;
       notifyStateChanges(true);
+      Timer imageTimer = new Timer();
+      imageTimer.scheduleAtFixedRate(this, 5000, 30000);
     }
   }
 
@@ -163,6 +194,9 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     sensorReadingTimer.scheduleAtFixedRate(newSensorValueTask, randomStartDelay, SENSING_DELAY);
   }
 
+  /**
+   * Stop the periodic sensor reading.
+   */
   private void stopPeriodicSensorReading() {
     if (sensorReadingTimer != null) {
       sensorReadingTimer.cancel();
@@ -179,18 +213,36 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     debugPrint();
   }
 
+  /**
+   * Add random noise to all sensors.
+   */
   private void addRandomNoiseToSensors() {
     for (Sensor sensor : sensors) {
       sensor.addRandomNoise();
     }
   }
 
+  /**
+   * Add random image to all cameras.
+   */
+  private void addRandomImageToCameras() {
+    cameras.clear();
+    cameras.add(DeviceFactory.createCamera(1));
+  }
+
+  /**
+   * Print the current state of the node to the console.
+   */
   private void debugPrint() {
     for (Sensor sensor : sensors) {
       Logger.infoNoNewline(" " + sensor.getReading().getFormatted());
     }
     Logger.infoNoNewline(" :");
     actuators.debugPrint();
+    Logger.info(":");
+    for (Camera camera : cameras) {
+      Logger.info(" Camera " + camera.getId());
+    }
     Logger.info("");
   }
 
@@ -208,22 +260,42 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     actuator.toggle();
   }
 
+  /**
+   * Get an actuator by its ID.
+   *
+   * @param actuatorId The ID of the actuator to get
+   * @return The actuator with the given ID
+   */
   private Actuator getActuator(int actuatorId) {
     return actuators.get(actuatorId);
   }
 
+  /**
+   * Notify the listeners that the sensor values have changed.
+   */
   private void notifySensorChanges() {
     for (SensorListener listener : sensorListeners) {
       listener.sensorsUpdated(sensors);
     }
   }
 
+  /**
+   * An actuator has been turned on or off. Apply an impact from it to all sensors.
+   *
+   * @param nodeId   ID of the node on which this actuator is placed
+   * @param actuator The actuator that has changed its state
+   */
   @Override
   public void actuatorUpdated(int nodeId, Actuator actuator) {
     actuator.applyImpact(this);
     notifyActuatorChange(actuator);
   }
 
+  /**
+   * Notify the listeners that an actuator has changed its state.
+   *
+   * @param actuator The actuator that has changed its state
+   */
   private void notifyActuatorChange(Actuator actuator) {
     String onOff = actuator.isOn() ? "ON" : "off";
     Logger.info(" => " + actuator.getType() + " on node " + id + " " + onOff);
@@ -232,6 +304,15 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     }
   }
 
+  /**
+   * Notify the listeners that the cameras have changed.
+   */
+  private void notifyCameraChanges() {
+    addRandomImageToCameras();
+    for (CameraListener listener : cameraListeners) {
+      listener.cameraUpdated(cameras);
+    }
+  }
 
   /**
    * Notify the listeners that the state of this node has changed.
@@ -274,6 +355,15 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
   }
 
   /**
+   * Get all the cameras available on the device.
+   *
+   * @return List of all the cameras
+   */
+  public List<Camera> getCameras() {
+    return cameras;
+  }
+
+  /**
    * Get all the actuators available on the node.
    *
    * @return A collection of the actuators
@@ -282,6 +372,9 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     return actuators;
   }
 
+  /**
+   * The communication channel has been closed. Stop the node.
+   */
   @Override
   public void onCommunicationChannelClosed() {
     Logger.info("Communication channel closed for node " + id);
@@ -298,7 +391,6 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     Actuator actuator = getActuator(actuatorId);
     if (actuator != null) {
       actuator.set(on);
-
     }
   }
 
@@ -311,5 +403,14 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     for (Actuator actuator : actuators) {
       actuator.set(on);
     }
+  }
+
+  /**
+   * Run the scheduled task.
+   */
+  @Override
+  public void run() {
+    System.out.println("Running scheduled task");
+    notifyCameraChanges();
   }
 }
