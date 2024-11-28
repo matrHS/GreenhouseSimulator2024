@@ -22,9 +22,12 @@ distributed application.
 <!--TODO - what transport-layer protocol do you use? TCP? UDP? What port number(s)? Why did you 
 choose this transport layer protocol? -->
 
+The underlying transport-layer protocol is TCP, this ensures a reliable information transfer. It is important that the
+greenhouse information arrives before the node readings and actuator state information, so that the elements of the GUI
+can be built and handle the information. Without TCP we would not be able to ensure reliable and ordered transfer of
+information. The main server in our application uses TCP ort 1238, while the socket connections too it use dynamically
+assigned ports.
 
-TCP Port 1238.
-TCP is used to ensure that our data is successfully transferred between the various parts of the system.
 
 ## The architecture
 <!--TODO - show the general architecture of your network. Which part is a server? Who are clients? 
