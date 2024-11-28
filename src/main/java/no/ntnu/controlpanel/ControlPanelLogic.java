@@ -7,7 +7,7 @@ import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.ControlPanelLogger;
 
 /**
  * The central logic of a control panel node. It uses a communication channel to send commands
@@ -25,6 +25,7 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
 
   private CommunicationChannel communicationChannel;
   private CommunicationChannelListener communicationChannelListener;
+  private ControlPanelLogger logger = ControlPanelLogger.getInstance();
 
   /**
    * Set the channel over which control commands will be sent to sensor/actuator nodes.
@@ -92,7 +93,7 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
 
   @Override
   public void onCommunicationChannelClosed() {
-    Logger.info("Communication closed, updating logic...");
+    logger.info("Communication closed, updating logic...");
     if (communicationChannelListener != null) {
       communicationChannelListener.onCommunicationChannelClosed();
     }

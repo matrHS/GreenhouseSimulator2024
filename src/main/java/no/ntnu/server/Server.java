@@ -7,7 +7,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.ControlPanelLogger;
+import no.ntnu.tools.ServerLogger;
+
 
 /**
  * The server class.
@@ -18,6 +20,8 @@ public class Server {
   private ServerSocket serverSocket;
 
   private HashMap<String, String[]> latestReading;
+
+  private ServerLogger logger = ServerLogger.getInstance();
 
   /**
    * Constructor for the server.
@@ -35,9 +39,9 @@ public class Server {
   public static void main(String[] args) {
 //    String[] hello = new String[]{"hello"};
 //    String[] encryptedHello = Config.encrypt(hello);
-//    Logger.info(encryptedHello[0]);
+//    controlPanelLogger.info(encryptedHello[0]);
 //    hello = Config.decrypt(encryptedHello);
-//    Logger.info(hello[0]);
+//    controlPanelLogger.info(hello[0]);
     Server server = new Server();
     server.run();
 
@@ -79,10 +83,10 @@ public class Server {
    */
   public void closeSocket(HashMap map, Socket socket) {
     try {
-      Logger.info("Attempting to close greenouse socket with port " + socket.getPort());
+      logger.info("Attempting to close greenouse socket with port " + socket.getPort());
       socket.close();
       map.remove(socket.getPort());
-      Logger.info("Greenouse socket with port " + socket.getPort() + " closed");
+      logger.info("Greenouse socket with port " + socket.getPort() + " closed");
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
@@ -111,13 +115,13 @@ public class Server {
    */
   @SuppressWarnings("all")
   public void run() {
-    Logger.info("server starting");
-    Logger.info("Running on port: " + serverSocket.getLocalPort());
+    logger.info("server starting");
+    logger.info("Running on port: " + serverSocket.getLocalPort());
     while (true) {
 
       Socket socket = acceptNextClient();
-      Logger.info("Connected to: " + socket.getPort());
-      Logger.info("holding sockets for: " + greenHouseSockets.keySet() + " and "
+      logger.info("Connected to: " + socket.getPort());
+      logger.info("holding sockets for: " + greenHouseSockets.keySet() + " and "
           + controlPanels.keySet());
     }
   }
@@ -157,7 +161,7 @@ public class Server {
             this);
         controlPanels.put(socket.getPort(), handler);
         handler.start();
-        Logger.info("new control panel connected");
+        logger.info("new control panel connected");
         this.putCommandNode(new String[] {"info", "-1"}, -1);
       } else {
 

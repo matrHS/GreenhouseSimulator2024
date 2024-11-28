@@ -16,8 +16,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
+import no.ntnu.tools.GreenhouseLogger;
 import no.ntnu.tools.RSA;
-import no.ntnu.tools.Logger;
 import no.ntnu.tools.Config;
 
 /**
@@ -38,6 +38,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
   private boolean allowSendReading;
 
   private ArrayList<ArrayList<SensorReading>> aggregateReadings = new ArrayList<>();
+  private GreenhouseLogger logger = GreenhouseLogger.getInstance();
 
 
   /**
@@ -147,10 +148,10 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
       this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
       String[] payload = nodeInfoForAddingNodesOnCPanel();
       payload[0] = "add";
-      Logger.info("sending node info to server");
+      logger.info("sending node info to server");
       this.objectOutputStream.writeObject(payload);
     } catch (IOException e) {
-      Logger.error("Failed to connect to server");
+      logger.error("Failed to connect to server");
     }
   }
 
@@ -189,7 +190,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
         case "set":
           // Broadcast to all actuators
           if (command[1].contains("-1")) {
-            Logger.info("Broadcasting set all actuators");
+            logger.info("Broadcasting set all actuators");
             node.getActuators()
                 .forEach(actuator -> node.setActuator(actuator.getId(),
                     Boolean.parseBoolean(command[2])));
@@ -200,7 +201,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
         case "toggle":
           // Broadcast to all actuators
           if (command[1].contains("-1")) {
-            Logger.info("Broadcasting toggle all actuators");
+            logger.info("Broadcasting toggle all actuators");
             node.getActuators().forEach(actuator -> node.toggleActuator(actuator.getId()));
           } else {
             node.toggleActuator(Integer.parseInt(command[1]));
@@ -209,21 +210,21 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
         case "info":
           String[] nodeInfo = nodeInfoForAddingNodesOnCPanel();
           nodeInfo[0] = "add";
-          Logger.info("sending node info to server");
+          logger.info("sending node info to server");
           this.setCommandQueue(nodeInfo);
           allowSendReading = true;
           break;
 
         default:
-          Logger.info("Unknown command: " + command[0]);
+          logger.info("Unknown command: " + command[0]);
       }
     } catch (RuntimeException e) {
-      Logger.error(e.toString());
+      logger.error(e.toString());
     } catch (SocketTimeoutException e) {
     } catch (IOException e) {
-      Logger.error("failed to read");
+      logger.error("failed to read");
     } catch (ClassNotFoundException e) {
-      Logger.error("wrong type of object dumbass");
+      logger.error("wrong type of object dumbass");
 
     }
   }
@@ -239,7 +240,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
       try {
         objectOutputStream.writeObject(commandQueue.poll());
       } catch (IOException e) {
-        Logger.info("Failed to write to the server");
+        logger.info("Failed to write to the server");
       }
     }
   }
@@ -253,10 +254,10 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     } catch (SocketTimeoutException e) {
       return null;
     } catch (IOException e) {
-      // Logger.error("Timeout when reading command\n" + e.toString());
+      // logger.error("Timeout when reading command\n" + e.toString());
       throw new RuntimeException(e);
     } catch (ClassNotFoundException e) {
-      Logger.error(e.toString());
+      logger.error(e.toString());
       throw new RuntimeException(e);
     }
   }
@@ -277,7 +278,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
       socket.setSoTimeout(Config.TIMEOUT);
       processCommand();
     } catch (IOException e) {
-      Logger.error("failed to read from server");
+      logger.error("failed to read from server");
     }
   }
 

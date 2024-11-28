@@ -7,8 +7,10 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import no.ntnu.tools.ControlPanelLogger;
 import no.ntnu.tools.Logger;
 import no.ntnu.tools.Config;
+import no.ntnu.tools.ServerLogger;
 
 /**
  * The control panel handler class. This class is responsible for handling the communication between
@@ -25,6 +27,7 @@ public class ControlPanelHandler extends Thread {
 
   private LinkedBlockingQueue<String[]> commandQueue;
   private Server server;
+  private ServerLogger logger = ServerLogger.getInstance();
 
   /**
    * Constructor for the control panel handler.
@@ -68,7 +71,7 @@ public class ControlPanelHandler extends Thread {
       } catch (IOException e) {
         server.closeSocket(server.getCPMap(), this.socket);
       } catch (ClassNotFoundException e) {
-        Logger.error(e.toString());
+        logger.error(e.toString());
       }
     }
   }
@@ -92,7 +95,7 @@ public class ControlPanelHandler extends Thread {
     try {
       outputStream.writeObject(command);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      logger.error("failed to send to command to control panel: " + e.getMessage());
     }
   }
 
@@ -105,7 +108,7 @@ public class ControlPanelHandler extends Thread {
     try {
       this.commandQueue.put(command);
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      logger.error("Failed to put command on command queue ");
     }
   }
 }

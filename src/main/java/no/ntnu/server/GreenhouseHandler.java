@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.tools.Config;
+import no.ntnu.tools.ControlPanelLogger;
+import no.ntnu.tools.ServerLogger;
 
 /**
  * The greenhouse handler class. This class
@@ -21,6 +23,7 @@ public class GreenhouseHandler extends Thread {
   private LinkedBlockingQueue<String[]> commandQueue;
   private Server server;
 
+  private ServerLogger logger = ServerLogger.getInstance();
   /**
    * Constructor for the GreenhouseHandler.
    *
@@ -30,7 +33,7 @@ public class GreenhouseHandler extends Thread {
                            ObjectInputStream inputStream, Server server) {
     this.socket = clientSocket;
     try {
-      System.out.println("I am greenouse: " + socket.getPort());
+      logger.info("I am greenouse: " + socket.getPort());
       this.outputStream = outputStream;
       this.inputStream = inputStream;
       this.commandQueue = new LinkedBlockingQueue<>();
@@ -55,7 +58,7 @@ public class GreenhouseHandler extends Thread {
   }
 
   /**
-   * Set a command to be sent to the greenhouse.
+   * Set a command to be sent to the control panel
    *
    * @param commands The command to be sent
    */
@@ -63,7 +66,7 @@ public class GreenhouseHandler extends Thread {
     try {
       this.commandQueue.put(commands);
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      logger.error("failed to put command on command queue from node to cp");
     }
   }
 
@@ -75,7 +78,7 @@ public class GreenhouseHandler extends Thread {
       try {
         outputStream.writeObject(this.commandQueue.poll());
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        logger.error("Failed to write a command to greenhouse");
       }
     }
   }
@@ -90,11 +93,10 @@ public class GreenhouseHandler extends Thread {
       server.putCommandControlPanel(command);
 
     } catch (SocketTimeoutException e) {
-      //Logger.error(e.getMessage());
     } catch (IOException e) {
       server.closeSocket(server.getNodeMap(), this.socket);
     } catch (ClassNotFoundException e) {
-      throw new RuntimeException(e);
+      logger.info("Wrong message format or class");
     }
   }
 

@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.SensorReading;
+import no.ntnu.tools.ControlPanelLogger;
 import no.ntnu.tools.RSA;
-import no.ntnu.tools.Logger;
 import no.ntnu.tools.Config;
 
 /**
@@ -26,6 +26,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   private LinkedBlockingQueue<String[]> commandQueue;
 
   private final BigInteger[] keys = this.keyGen();
+  private ControlPanelLogger logger = ControlPanelLogger.getInstance();
 
   /**
    * Constructor for the ControlPanelCommunication.
@@ -46,7 +47,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
 
       outputStream.writeObject(RSA.encrypt(payload,keys));
     } catch (IOException e) {
-      Logger.error("Failed to send actuator change");
+      logger.error("Failed to send actuator change");
     }
   }
 
@@ -152,7 +153,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
         String[] sealedPayload = RSA.encrypt(commandQueue.poll(), keys);
         outputStream.writeObject(sealedPayload);
       } catch (IOException e) {
-        Logger.info("Failed to write to the server");
+        logger.info("Failed to write to the server");
       }
     }
   }
@@ -164,7 +165,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     try {
       socket.close();
     } catch (IOException e) {
-      Logger.error("Failed to close communication");
+      logger.error("Failed to close communication");
 
     }
   }
@@ -185,9 +186,9 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
       } catch (SocketTimeoutException s) {
         sendCommandIfExists();
       } catch (IOException e) {
-        Logger.error("Thread timeout ");
+        logger.error("Thread timeout ");
       } catch (ClassNotFoundException e) {
-        Logger.error("Failed to understand sent object");
+        logger.error("Failed to understand sent object");
       }
     }
   }
@@ -227,7 +228,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     try {
       outputStream.writeObject(RSA.encrypt(payload, keys));
     } catch (IOException e) {
-      Logger.error("Failed to send actuator change");
+      logger.error("Failed to send actuator change");
     }
   }
 

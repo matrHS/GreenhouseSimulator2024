@@ -34,7 +34,7 @@ import no.ntnu.gui.greenhouse.MainGuiController;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.controlpanel.ActuatorChangedListener;
 import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.ControlPanelLogger;
 
 /**
  * Run a control panel with a graphical user interface (GUI), with JavaFX.
@@ -54,6 +54,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private Stage stage;
   private TabPane tabPane; // The tab pane for the app
   private MainGuiController controller;
+  private ControlPanelLogger logger = ControlPanelLogger.getInstance();
 
 
   private LinkedBlockingQueue<String[]> commandQueue;
@@ -65,12 +66,13 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    * @param channel The communication channel
    */
   public static void startApp(ControlPanelLogic logic, CommunicationChannel channel) {
+    ControlPanelLogger logger = ControlPanelLogger.getInstance();
     if (logic == null) {
       throw new IllegalArgumentException("Control panel logic can't be null");
     }
     ControlPanelApplication.logic = logic;
     ControlPanelApplication.channel = (ControlPanelCommunication) channel;
-    Logger.info("Running control panel GUI...");
+    logger.info("Running control panel GUI...");
     launch();
   }
 
@@ -149,9 +151,9 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
           mainPane.getChildren().add(new HBox(new Label("No greenhouses found")));
         }
       });
-      Logger.info("Greenhouse " + nodeId + " removed");
+      logger.info("Greenhouse " + nodeId + " removed");
     } else {
-      Logger.error("Can't remove greenhouse " + nodeId);
+      logger.error("Can't remove greenhouse " + nodeId);
     }
   }
 
@@ -168,7 +170,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
             .toExternalForm()));
     stage.setScene(scene);
     stage.show();
-    Logger.info("GUI subscribes to lifecycle events");
+    logger.info("GUI subscribes to lifecycle events");
   }
 
   /**
@@ -192,7 +194,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       root.setBottom(createBottomPane());
       return root;
     } catch (Exception e) {
-      Logger.error("Error: " + e.getMessage());
+      logger.error("Error: " + e.getMessage());
     }
     return null;
   }
@@ -230,12 +232,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    */
   @Override
   public void onSensorData(int nodeId, List<SensorReading> sensors) {
-    Logger.info("Sensor data from greenhouse " + nodeId);
+    logger.info("Sensor data from greenhouse " + nodeId);
     SensorPane sensorPane = sensorPanes.get(nodeId);
     if (sensorPane != null) {
       sensorPane.update(sensors);
     } else {
-      Logger.error("No sensor section for greenhouse " + nodeId);
+      logger.error("No sensor section for greenhouse " + nodeId);
     }
   }
 
@@ -249,7 +251,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   @Override
   public void onActuatorStateChanged(int nodeId, int actuatorId, boolean isOn) {
     String state = isOn ? "ON" : "off";
-    Logger.info("actuator[" + actuatorId + "] on greenhouse " + nodeId + " is " + state);
+    logger.info("actuator[" + actuatorId + "] on greenhouse " + nodeId + " is " + state);
     ActuatorPane actuatorPane = actuatorPanes.get(nodeId);
     if (actuatorPane != null) {
       Actuator actuator = getStoredActuator(nodeId, actuatorId);
@@ -261,21 +263,21 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
         }
         actuatorPane.update(actuator);
       } else {
-        Logger.error(" actuator not found");
+        logger.error(" actuator not found");
       }
     } else {
-      Logger.error("No actuator section for greenhouse " + nodeId);
+      logger.error("No actuator section for greenhouse " + nodeId);
     }
   }
 
   @Override
   public void onAggregateSensorData(int nodeId, List<SensorReading> sensors) {
-    Logger.info("1 minute aggregate data from greenhouse " + nodeId);
+    logger.info("1 minute aggregate data from greenhouse " + nodeId);
     SensorPane aggregatePane = aggregatePanes.get(nodeId);
     if (aggregatePane != null) {
       aggregatePane.update(sensors);
     } else {
-      Logger.error("No sensor section for greenhouse " + nodeId);
+      logger.error("No sensor section for greenhouse " + nodeId);
     }
   }
 
@@ -316,7 +318,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       nodeInfos.put(nodeInfo.getId(), nodeInfo);
 
     } else {
-      Logger.info("Duplicate node spawned, ignore it");
+      logger.info("Duplicate node spawned, ignore it");
     }
   }
 
@@ -343,7 +345,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
       nodeInfos.put(nodeInfo.getId(), nodeInfo);
       tabPane.getTabs().add(createNodeTab(nodeInfo));
     } else {
-      Logger.info("Duplicate node spawned, ignore it");
+      logger.info("Duplicate node spawned, ignore it");
     }
   }
 
@@ -371,7 +373,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    */
   @Override
   public void onCommunicationChannelClosed() {
-    Logger.info("Communication closed, closing the GUI");
+    logger.info("Communication closed, closing the GUI");
     Platform.runLater(Platform::exit);
   }
 
@@ -380,7 +382,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     try {
       commandQueue.put(payload);
     } catch (InterruptedException e) {
-      Logger.info("failed to put command on queue.");
+      logger.info("failed to put command on queue.");
     }
   }
 
@@ -404,7 +406,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   @Override
   public void stop() {
     // This code is reached only after the GUI-window is closed
-    Logger.info("Exiting the control panel application");
+    logger.info("Exiting the control panel application");
     channel.closeCommunication();
     exit();
   }
