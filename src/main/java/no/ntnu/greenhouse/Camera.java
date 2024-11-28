@@ -43,6 +43,10 @@ public class Camera {
     return this.id;
   }
 
+  public int getNodeId(){
+    return this.nodeId;
+  }
+
   /**
    * Get the image of the camera is connected.
    *

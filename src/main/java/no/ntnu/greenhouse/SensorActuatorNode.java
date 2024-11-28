@@ -1,5 +1,9 @@
 package no.ntnu.greenhouse;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -198,6 +202,7 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     Logger.infoNoNewline("Node #" + id);
     addRandomNoiseToSensors();
     notifySensorChanges();
+    addRandomImageToCameras();
     notifyCameraChanges();
     debugPrint();
   }
@@ -205,6 +210,12 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
   private void addRandomNoiseToSensors() {
     for (Sensor sensor : sensors) {
       sensor.addRandomNoise();
+    }
+  }
+
+  private void addRandomImageToCameras(){
+    for (Camera camera : cameras){
+      camera = DeviceFactory.createCamera(camera.getNodeId());
     }
   }
 

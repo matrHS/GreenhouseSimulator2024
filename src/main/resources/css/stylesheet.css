@@ -15,8 +15,6 @@
     -fx-scale-y: 0.75;
 }
 
-
-
 .tab-pane {
     -fx-background-color: rgba(194, 213, 187, 0.92);
     -fx-padding: 5;
@@ -67,4 +65,25 @@
     -fx-min-width: 150;
     -fx-max-width: 150;
 }
+
+.camera-scroll-pane{
+    -fx-padding: 5;
+    -fx-min-height: 500;
+    -fx-max-height: 500;
+}
+.sensor-pane{
+    -fx-padding: 5;
+    -fx-min-height: 300;
+    -fx-max-height: 300;
+}
+.actuator-pane{
+    -fx-padding: 5;
+    -fx-min-height: 100;
+    -fx-max-height: 100;
+}
+.camera-view{
+    -fx-scale-x: 0.5;
+    -fx-scale-y: 0.5;
+}
+
 

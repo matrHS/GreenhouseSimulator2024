@@ -6,6 +6,7 @@ import java.util.List;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import no.ntnu.greenhouse.Sensor;
@@ -51,7 +52,8 @@ public class SensorPane extends TitledPane {
     sensors.forEach(sensor ->
                         contentBox.getChildren().add(createAndRememberSensorLabel(sensor))
     );
-    setContent(contentBox);
+    contentBox.getStyleClass().add("sensor-pane");
+    setContent(new ScrollPane(contentBox));
   }
 
   /**

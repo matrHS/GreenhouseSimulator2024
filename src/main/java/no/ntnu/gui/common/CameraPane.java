@@ -40,6 +40,7 @@ public class CameraPane extends TitledPane {
                        Platform.runLater(() -> cameraBox.getChildren().add(createImageBox(image)))
     );
     contentBox.setContent(cameraBox);
+    contentBox.getStyleClass().add("camera-scroll-pane");
     setContent(contentBox);
   }
 
@@ -71,6 +72,7 @@ public class CameraPane extends TitledPane {
     byte[] imageBytes = Base64.getDecoder().decode(image);
     Image img = new Image(new ByteArrayInputStream(imageBytes));
     ImageView imageView = new ImageView(img);
+    imageView.getStyleClass().add("camera-view");
     BorderPane box = new BorderPane();
     box.setTop(new Text(name));
     box.setCenter(imageView);
