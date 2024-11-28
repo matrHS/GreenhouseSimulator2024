@@ -25,6 +25,7 @@ public class ControlPanelHandler extends Thread {
 
   private LinkedBlockingQueue<String[]> commandQueue;
   private Server server;
+  private int socketAddress;
 
   /**
    * Constructor for the control panel handler.
@@ -43,6 +44,7 @@ public class ControlPanelHandler extends Thread {
     this.server = server;
     this.cmdStack = new AtomicReference<>();
     this.commandQueue = new LinkedBlockingQueue<>();
+    this.socketAddress = socket.getPort();
   }
   /**
    * The main run method of this handler.
@@ -71,6 +73,7 @@ public class ControlPanelHandler extends Thread {
         Logger.error(e.toString());
       }
     }
+
   }
 
 
