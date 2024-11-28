@@ -65,7 +65,6 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
       listenForCommands();
       sendCommandIfExists();
 
-
     }
   }
 
@@ -138,7 +137,6 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     this.node = DeviceFactory.createNode(
         temperature, humidity, windows, fans, heaters, cameras);
     node.addSensorListener(this);
-
   }
 
 
@@ -179,9 +177,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
 
       nodeInfo[index + 2] = String.valueOf(actuator.isOn());
       index = index + 3;
-
     }
-
     return nodeInfo;
   }
 
@@ -189,7 +185,6 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
    * Processes the command received from the server.
    */
   private void processCommand() {
-
     try {
       String[] payload = (String[]) objectInputStream.readObject();
       String[] command = RSA.decrypt(payload, keys);
@@ -231,8 +226,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     } catch (IOException e) {
       Logger.error("failed to read");
     } catch (ClassNotFoundException e) {
-      Logger.error("wrong type of object dumbass");
-
+      Logger.error("wrong type of object dumbass"); //TODO no profanities!
     }
   }
 
@@ -318,6 +312,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
   public void onNodeReady(SensorActuatorNode node) {
     node.addSensorListener(this);
     node.addActuatorListener(this);
+    node.addCameraListener(this);
   }
 
   @Override

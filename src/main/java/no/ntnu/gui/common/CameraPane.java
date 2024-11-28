@@ -1,10 +1,11 @@
 package no.ntnu.gui.common;
 
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Node;
 import javafx.scene.control.TitledPane;
@@ -14,24 +15,23 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import no.ntnu.greenhouse.Camera;
-import no.ntnu.greenhouse.Sensor;
-import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.tools.Logger;
+
 
 public class CameraPane extends TitledPane {
   private final List<SimpleStringProperty> cameras = new ArrayList<>();
   private final VBox contentBox = new VBox();
 
   public CameraPane(List<Camera> cameras){
-    initialize(cameras.stream().map(Camera::getCamera).toList());
+    initialize(cameras.stream().map(Camera::getImage).toList());
   }
   public CameraPane(){
     initialize(new LinkedList<>());
   }
-  private void initialize(Iterable<Camera> cameras) {
+  private void initialize(Iterable<String> images) {
+
     setText("Cameras");
-    cameras.forEach(camera ->
-                        contentBox.getChildren().add(createImageBox(camera))
+    images.forEach(image ->
+                        contentBox.getChildren().add(createImageBox(image))
     );
     setContent(contentBox);
   }
@@ -39,11 +39,12 @@ public class CameraPane extends TitledPane {
   /**
    * Update the GUI according to the changes in camera data.
    *
-   * @param cameras The camera data that has been updated
+   * @param images The camera data that has been updated
    */
-  public void update(Iterable<Camera> cameras) {
-    for (Camera camera : cameras) {
-      createImageBox(camera);
+  public void update(Iterable<String> images) {
+    //int index =0;
+    for (String image : images) {
+      createImageBox(image); //TODO add index here
     }
   }
 
@@ -54,13 +55,15 @@ public class CameraPane extends TitledPane {
    * @param cameras The sensor data that has been updated
    */
   public void update(List<Camera> cameras) {
-    update(cameras.stream().map(Camera::getCamera).toList());
+    update(cameras.stream().map(Camera::getImage).toList());
   }
 
-  private Node createImageBox(Camera camera){
-    String name = "Camera " + camera.getId();
-    String cameraImage = camera.getImage();
-    ImageView imageView = new ImageView(String.valueOf(cameraImage));
+  private Node createImageBox(String image){
+    String name = "Camera something";
+
+    byte[] imageBytes = Base64.getDecoder().decode(image);
+    Image img = new Image(new ByteArrayInputStream(imageBytes));
+    ImageView imageView = new ImageView(img);
     BorderPane box = new BorderPane();
     box.setTop(new Text(name));
     box.setCenter(imageView);

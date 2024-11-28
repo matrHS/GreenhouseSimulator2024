@@ -263,8 +263,6 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
       listener.cameraUpdated(cameras);
     }
   }
-
-
   /**
    * Notify the listeners that the state of this node has changed.
    *

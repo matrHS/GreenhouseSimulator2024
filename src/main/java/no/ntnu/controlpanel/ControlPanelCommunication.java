@@ -133,7 +133,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
               new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
           for (int i = 2; i < payload.length; i += 3) {
             Actuator actuator = new Actuator(Integer.parseInt(payload[i + 1]), payload[i],
-                Integer.parseInt(payload[1]));
+                                Integer.parseInt(payload[1]));
             Boolean state = Boolean.parseBoolean(payload[i + 2]);
             actuator.set(state);
 
@@ -159,11 +159,12 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
 
         case "update":
           break;
+
         case "aggregate":
           logic.onAggregateSensorData(Integer.parseInt(payload[1]), handleReadings(payload));
           break;
 
-        case "image":
+        case "camera":
           logic.onImageSensor(Integer.parseInt(payload[1]), handleCameras(payload));
           break;
 

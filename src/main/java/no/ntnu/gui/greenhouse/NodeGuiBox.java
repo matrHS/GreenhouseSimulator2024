@@ -8,8 +8,10 @@ import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.Sensor;
 import no.ntnu.greenhouse.SensorActuatorNode;
 import no.ntnu.gui.common.ActuatorPane;
+import no.ntnu.gui.common.CameraPane;
 import no.ntnu.gui.common.SensorPane;
 import no.ntnu.listeners.common.ActuatorListener;
+import no.ntnu.listeners.common.CameraListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
 
 /**
@@ -20,6 +22,7 @@ public class NodeGuiBox implements SensorListener, ActuatorListener {
   private final SensorActuatorNode node;
   private ActuatorPane actuatorPane;
   private SensorPane sensorPane;
+  private CameraPane cameraPane;
 
   /**
    * Create a GUI window for a specific node.
@@ -40,7 +43,8 @@ public class NodeGuiBox implements SensorListener, ActuatorListener {
     HBox nodeBox = new HBox();
     actuatorPane = new ActuatorPane(node.getActuators());
     sensorPane = new SensorPane(node.getSensors(), "Sensors");
-    nodeBox.getChildren().add(createContent(actuatorPane, sensorPane));
+    cameraPane = new CameraPane(node.getCameras());
+    nodeBox.getChildren().add(createContent(actuatorPane, sensorPane, cameraPane));
     return nodeBox;
   }
 
@@ -52,6 +56,7 @@ public class NodeGuiBox implements SensorListener, ActuatorListener {
   private void initializeListeners(SensorActuatorNode node) {
     node.addSensorListener(this);
     node.addActuatorListener(this);
+    //node.addCameraListener(this);
   }
 
   /**
@@ -86,8 +91,8 @@ public class NodeGuiBox implements SensorListener, ActuatorListener {
    * @param sensorPane The sensor pane
    * @return The node box
    */
-  public VBox createContent(ActuatorPane actuatorPane, SensorPane sensorPane) {
-    VBox nodeBox = new VBox(sensorPane, actuatorPane);
+  public VBox createContent(ActuatorPane actuatorPane, SensorPane sensorPane, CameraPane cameraPane) {
+    VBox nodeBox = new VBox(sensorPane, actuatorPane, cameraPane);
     nodeBox.setMinWidth(300);
     nodeBox.setMaxHeight(600);
     nodeBox.setAlignment(Pos.CENTER);
