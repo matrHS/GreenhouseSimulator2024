@@ -18,16 +18,14 @@ import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
 import no.ntnu.tools.RSA;
 import no.ntnu.tools.Logger;
-import no.ntnu.tools.SocketTimeout;
+import no.ntnu.tools.Config;
 
 /**
  * The GreenhouseNode class is responsible for handling the communication between the greenhouse and
  * the server. It listens for commands from the server and sends sensor readings to the server.
  */
 public class GreenhouseNode extends TimerTask implements SensorListener, NodeStateListener, ActuatorListener  {
-  private final static String SERVER_HOST = "localhost";
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
-  private int TCP_PORT = 1238;
   private ObjectInputStream objectInputStream;
   private ObjectOutputStream objectOutputStream;
   private Socket socket;
@@ -45,10 +43,9 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
   /**
    * Create a greenhouse node that should connect to specified TCP port of server.
    *
-   * @param TCP_PORT the TCP port of the server
+   *
    */
-  public GreenhouseNode(int TCP_PORT) {
-    this.TCP_PORT = TCP_PORT;
+  public GreenhouseNode() {
   }
 
   /**
@@ -144,8 +141,8 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
   private void initiateCommunication() {
     // TODO - here you can set up the TCP or UDP communication
     try {
-      this.socket = new Socket(SERVER_HOST, this.TCP_PORT);
-      socket.setSoTimeout(SocketTimeout.timeout);
+      this.socket = new Socket(Config.SERVER_ADDRESS, Config.SERVER_PORT);
+      socket.setSoTimeout(Config.TIMEOUT);
       this.objectInputStream = new ObjectInputStream(socket.getInputStream());
       this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
       String[] payload = nodeInfoForAddingNodesOnCPanel();
@@ -277,7 +274,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
 
   private void listenForCommands() {
     try {
-      socket.setSoTimeout(SocketTimeout.timeout);
+      socket.setSoTimeout(Config.TIMEOUT);
       processCommand();
     } catch (IOException e) {
       Logger.error("failed to read from server");

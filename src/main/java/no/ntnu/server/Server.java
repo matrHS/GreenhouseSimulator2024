@@ -6,13 +6,13 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
 
 /**
  * The server class.
  */
 public class Server {
-  static final int TCP_PORT = 1238;
   protected HashMap<Integer, GreenhouseHandler> greenHouseSockets;
   protected HashMap<Integer, ControlPanelHandler> controlPanels;
   private ServerSocket serverSocket;
@@ -130,7 +130,7 @@ public class Server {
   private ServerSocket openListeningPort() {
     ServerSocket listeningSocket = null;
     try {
-      listeningSocket = new ServerSocket(TCP_PORT);
+      listeningSocket = new ServerSocket(Config.SERVER_PORT);
     } catch (IOException e) {
       System.out.println("Could not open listening socket: " + e.getMessage());
     }

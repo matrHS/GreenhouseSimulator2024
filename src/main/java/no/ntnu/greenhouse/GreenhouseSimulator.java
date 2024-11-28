@@ -9,17 +9,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
+import no.ntnu.tools.Config;
 import no.ntnu.tools.Logger;
 
 /**
  * Application entrypoint - a simulator for a greenhouse.
  */
 public class GreenhouseSimulator {
-  private final static String SERVER_HOST = "localhost";
   private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
   private final List<PeriodicSwitch> periodicSwitches = new LinkedList<>();
   private final boolean fake;
-  private int TCP_PORT = 1238;
   private ObjectInputStream objectInputStream;
   private ObjectOutputStream objectOutputStream;
   private Socket socket;
@@ -35,8 +34,7 @@ public class GreenhouseSimulator {
     this.fake = fake;
   }
 
-  public GreenhouseSimulator(int tcp) {
-    TCP_PORT = tcp;
+  public GreenhouseSimulator() {
     this.fake = false;
   }
 
@@ -44,7 +42,7 @@ public class GreenhouseSimulator {
    * Initialise the greenhouse but don't start the simulation just yet.
    */
   public void initialize() {
-    this.greenhouseNode = new GreenhouseNode(TCP_PORT);
+    this.greenhouseNode = new GreenhouseNode();
     this.greenhouseNode.initialize(new String[] {"1", "2", "1", "0", "0"});
 
     Logger.info("Greenhouse initialized");
@@ -83,7 +81,7 @@ public class GreenhouseSimulator {
   private void initiateRealCommunication() {
     // TODO - here you can set up the TCP or UDP communication
     try {
-      this.socket = new Socket(SERVER_HOST, this.TCP_PORT);
+      this.socket = new Socket(Config.SERVER_ADDRESS, Config.SERVER_PORT);
       objectInputStream = new ObjectInputStream(socket.getInputStream());
 
       System.out.println("Connection Established");

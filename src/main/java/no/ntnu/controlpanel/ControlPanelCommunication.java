@@ -13,15 +13,13 @@ import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.tools.RSA;
 import no.ntnu.tools.Logger;
-import no.ntnu.tools.SocketTimeout;
+import no.ntnu.tools.Config;
 
 /**
  * The communication channel for the control panel. It communicates with the server and sends
  */
 public class ControlPanelCommunication extends Thread implements CommunicationChannel {
-  private final static String SERVER_HOST = "localhost";
   private final ControlPanelLogic logic;
-  private final int TCP_PORT = 1238;
   private ObjectInputStream inputStream;
   private ObjectOutputStream outputStream;
   private Socket socket;
@@ -63,7 +61,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
    */
   private void instantiate() {
     try {
-      this.socket = new Socket(SERVER_HOST, TCP_PORT);
+      this.socket = new Socket(Config.SERVER_ADDRESS, Config.SERVER_PORT);
       this.inputStream = new ObjectInputStream(socket.getInputStream());
       this.outputStream = new ObjectOutputStream(socket.getOutputStream());
       this.outputStream.writeObject("cp");
@@ -179,7 +177,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     this.instantiate();
     while (!socket.isClosed()) {
       try {
-        socket.setSoTimeout(SocketTimeout.timeout);
+        socket.setSoTimeout(Config.TIMEOUT);
         Object object = inputStream.readObject();
         if (object != null) {
           this.handlePayload(object);

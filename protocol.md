@@ -65,7 +65,8 @@ data if the server disconnects.
 ## Types, constants
 <!--TODO - Do you have some specific value types you use in several messages? They you can describe 
 them here. --> 
-
+The socket timeout timer is shared across all classes as a constant variable. The server TCP port is also shared across
+all.
 
 ## Message format
 <!--TODO - describe the general format of all messages. Then describe specific format for each 

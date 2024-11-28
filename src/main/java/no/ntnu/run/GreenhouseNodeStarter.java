@@ -13,7 +13,7 @@ public class GreenhouseNodeStarter {
    * @param args The arguments to the program.
    */
   public static void main(String[] args) {
-    GreenhouseNode manager = new GreenhouseNode(1238);
+    GreenhouseNode manager = new GreenhouseNode();
     manager.initialize(args);
     manager.start();
   }
