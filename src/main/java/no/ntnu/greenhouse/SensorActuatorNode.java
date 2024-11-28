@@ -213,6 +213,7 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     }
   }
 
+  //TODO 
   private void addRandomImageToCameras(){
     for (Camera camera : cameras){
       camera = DeviceFactory.createCamera(camera.getNodeId());

@@ -52,8 +52,10 @@ public class SensorPane extends TitledPane {
     sensors.forEach(sensor ->
                         contentBox.getChildren().add(createAndRememberSensorLabel(sensor))
     );
-    contentBox.getStyleClass().add("sensor-pane");
-    setContent(new ScrollPane(contentBox));
+    //contentBox.getStyleClass().add("sensor-pane");
+    ScrollPane scrollPane = new ScrollPane(contentBox);
+    scrollPane.getStyleClass().add("sensor-pane");
+    setContent(scrollPane);
   }
 
   /**

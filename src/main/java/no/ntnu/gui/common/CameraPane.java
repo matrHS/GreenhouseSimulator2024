@@ -8,12 +8,14 @@ import java.util.LinkedList;
 import java.util.List;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import no.ntnu.greenhouse.Camera;
@@ -22,8 +24,7 @@ import no.ntnu.greenhouse.SensorReading;
 
 public class CameraPane extends TitledPane {
   private final List<SimpleStringProperty> cameras = new ArrayList<>();
-  private final ScrollPane contentBox = new ScrollPane();
-  private final VBox cameraBox = new VBox();
+  private final VBox contentBox = new VBox();
 
 
   public CameraPane(List<Camera> cameras){
@@ -37,9 +38,9 @@ public class CameraPane extends TitledPane {
   private void initialize(Iterable<String> images) {
     setText("Cameras");
     images.forEach(image ->
-                       Platform.runLater(() -> cameraBox.getChildren().add(createImageBox(image)))
+                       Platform.runLater(() -> contentBox.getChildren().add(createImageBox(image)))
     );
-    contentBox.setContent(cameraBox);
+    contentBox.setAlignment(Pos.TOP_LEFT);
     contentBox.getStyleClass().add("camera-scroll-pane");
     setContent(contentBox);
   }
@@ -50,9 +51,9 @@ public class CameraPane extends TitledPane {
    * @param images The camera data that has been updated
    */
   public void update(Iterable<String> images) {
-    Platform.runLater(() -> cameraBox.getChildren().clear());
+    Platform.runLater(() -> contentBox.getChildren().clear());
     for (String image : images) {
-      Platform.runLater(() -> cameraBox.getChildren().add(createImageBox(image)));
+      Platform.runLater(() -> contentBox.getChildren().add(createImageBox(image)));
     }
   }
 
@@ -67,15 +68,13 @@ public class CameraPane extends TitledPane {
   }
 
   private Node createImageBox(String image){
-    String name = "Camera " ;
-
     byte[] imageBytes = Base64.getDecoder().decode(image);
     Image img = new Image(new ByteArrayInputStream(imageBytes));
     ImageView imageView = new ImageView(img);
     imageView.getStyleClass().add("camera-view");
-    BorderPane box = new BorderPane();
-    box.setTop(new Text(name));
-    box.setCenter(imageView);
-    return box;
+
+    HBox hbox =new HBox(imageView);
+    hbox.setAlignment(Pos.TOP_LEFT);
+    return hbox;
   }
 }

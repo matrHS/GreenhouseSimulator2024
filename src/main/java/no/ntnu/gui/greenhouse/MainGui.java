@@ -40,27 +40,6 @@ public class MainGui {
     }
   }
 
-  /**
-   * Get the description box for the main page of the application.
-   *
-   * @return The description box for the main page of the application
-   */
-  private static Text getDescription() {
-    Text description = new Text();
-    description.setText("Your task in this project is to implement a meaningful "
-                        + "application and its components for a"
-                        + "complete smart farming solution. The solution includes "
-                        + "communication with sockets. You need to"
-                        + "design your application-layer communication protocol and implement"
-                        + " necessary communication between the nodes so that the "
-                        + "control-panel nodes can visualize sensor data and control "
-                        + "the actuators on the sensor nodes.");
-    description.setFont(new Font(16));
-    description.setWrappingWidth(480);
-    description.setTextAlignment(TextAlignment.CENTER);
-    description.setX(100);
-    return description;
-  }
 
   /**
    * Create the main scene for the application.
@@ -84,13 +63,8 @@ public class MainGui {
    *
    * @return The center pane for the application
    */
-  private GridPane createCenterPane() {
-    GridPane centerPane = new GridPane();
-    Screen screen = Screen.getPrimary();
-    Rectangle2D bounds = screen.getVisualBounds();
-    centerPane.getColumnConstraints().add(new ColumnConstraints(bounds.getWidth() / 2));
-    centerPane.getColumnConstraints().add(new ColumnConstraints(bounds.getWidth() / 2));
-
+  private HBox createCenterPane() {
+    HBox centerPane = new HBox();
     try {
       Image greenhouseDrawing = new Image(
           Objects.requireNonNull(getClass().getResource(
@@ -99,19 +73,11 @@ public class MainGui {
 
       mainImage.getStyleClass().add("main-image");
       GridPane.setHalignment(mainImage, HPos.CENTER);
-      centerPane.add(mainImage, 0, 0);
+      centerPane.getChildren().add(mainImage);
 
     } catch (Exception e) {
       System.out.println("error:" + e.getMessage());
     }
-
-    HBox textBox = new HBox();
-    Text description = getDescription();
-    textBox.getChildren().add(description);
-    textBox.getStyleClass().add("text-box-main");
-
-    GridPane.setHalignment(textBox, HPos.CENTER);
-    centerPane.add(textBox, 1, 0);
 
     return centerPane;
 

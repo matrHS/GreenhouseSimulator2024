@@ -1,7 +1,6 @@
 package no.ntnu.gui.controlpanel;
 
 import static javafx.application.Platform.exit;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,16 +9,19 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.ControlPanelCommunication;
@@ -163,11 +165,11 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    */
   public void setScene(Scene scene) {
     scene.getStylesheets().add(getClass().getResource("/css/stylesheet.css").toExternalForm());
-    this.stage.setMaximized(true);
     stage.getIcons().add(new Image(
         Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
             .toExternalForm()));
     stage.setScene(scene);
+    stage.setResizable(false);
     stage.show();
     Logger.info("GUI subscribes to lifecycle events");
   }
@@ -179,15 +181,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    */
   private BorderPane setMainPage() {
     try {
-
-
       this.tabPane = new TabPane(controller.getHomeTab());
       tabPane.getStyleClass().add("tab-pane");
       tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
       BorderPane root = new BorderPane();
       VBox headerPane = Default.setHeader(this.controller);
-      VBox top = new VBox(headerPane, tabPane);
       root.setTop(headerPane);
       root.setCenter(tabPane);
       root.setBottom(createBottomPane());
@@ -207,7 +206,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private Node createBottomPane() {
 
     HBox bottomPane = new HBox();
-    bottomPane.getStyleClass().add("bottom-pane");
+    bottomPane.getStyleClass().add("actuators-buttons");
 
     Button openActuators = new Button("Open Actuators");
     Button closeActuators = new Button("Close Actuators");
@@ -218,7 +217,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     toggleActuators.setOnAction(e -> channel.toggleActuators());
 
     bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
-
 
     return bottomPane;
   }
@@ -378,7 +376,13 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     SensorPane aggregatePane = new SensorPane("1 minute average");
     aggregatePanes.put(nodeInfo.getId(), aggregatePane);
 
-    tab.setContent(new VBox(sensorPane, actuatorPane, cameraPane, aggregatePane));
+    VBox greenhuose = new VBox(sensorPane, actuatorPane, cameraPane, aggregatePane);
+    Screen screen = Screen.getPrimary();
+    Rectangle2D bounds = screen.getVisualBounds();
+    greenhuose.setMinWidth(bounds.getWidth());
+    greenhuose.setMaxWidth(bounds.getWidth());
+    ScrollPane scrollPane = new ScrollPane(greenhuose);
+    tab.setContent(scrollPane);
 
     nodeTabs.put(nodeInfo.getId(), tab);
     return tab;
