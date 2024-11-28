@@ -8,7 +8,7 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import no.ntnu.tools.Logger;
-import no.ntnu.tools.SocketTimeout;
+import no.ntnu.tools.Config;
 
 /**
  * The control panel handler class. This class is responsible for handling the communication between
@@ -25,6 +25,7 @@ public class ControlPanelHandler extends Thread {
 
   private LinkedBlockingQueue<String[]> commandQueue;
   private Server server;
+  private int socketAddress;
 
   /**
    * Constructor for the control panel handler.
@@ -43,6 +44,7 @@ public class ControlPanelHandler extends Thread {
     this.server = server;
     this.cmdStack = new AtomicReference<>();
     this.commandQueue = new LinkedBlockingQueue<>();
+    this.socketAddress = socket.getPort();
   }
   /**
    * The main run method of this handler.
@@ -52,7 +54,7 @@ public class ControlPanelHandler extends Thread {
 
     while (!socket.isClosed()) {
       try {
-        socket.setSoTimeout(SocketTimeout.timeout);
+        socket.setSoTimeout(Config.TIMEOUT);
         String[] commands = (String[]) inputStream.readObject();
         int id;
         if (commands[0].equals("set") || commands[0].equals("toggle")) {
@@ -71,6 +73,7 @@ public class ControlPanelHandler extends Thread {
         Logger.error(e.toString());
       }
     }
+
   }
 
 

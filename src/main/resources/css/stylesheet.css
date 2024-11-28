@@ -82,8 +82,8 @@
     -fx-max-height: 100;
 }
 .camera-view{
-    -fx-scale-x: 0.5;
-    -fx-scale-y: 0.5;
+    -fx-scale-x: 0.7;
+    -fx-scale-y: 0.7;
 }
 
 
