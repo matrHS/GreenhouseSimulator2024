@@ -65,8 +65,7 @@ data if the server disconnects.
 ## Types, constants
 <!--TODO - Do you have some specific value types you use in several messages? They you can describe 
 them here. --> 
-The socket timeout timer is shared across all classes as a constant variable. The server TCP port is also shared across
-all.
+The config class contains all the current constants, which are the socket timeout timer, the server TCP port and address.
 
 ## Message format
 <!--TODO - describe the general format of all messages. Then describe specific format for each 
@@ -137,39 +136,43 @@ example scenario could be as follows:-->
 
 1. Server is started
 2. New node connects to the server. It has a temperature sensor, two humidity sensors and a window.
-   1. The window actuator gets a nodeId of 2
+   1. The window actuator gets an id of 2
    2. This node gets the local socket port of 30000
+   3. The local socket port is saved on the server as the unique identifier for the socket and node.
 3. New node connects to the server. It has a temperature sensor, two fans and a heater.
-   1. First fan gets nodeId of 2
-   2. Second fan gets nodeId of 3
-   3. First heater gets nodeId of 4
+   1. First fan gets id of 2
+   2. Second fan gets id of 3
+   3. First heater gets id of 4
    4. This node gets the local socket port of 30001
+   5.  The local socket port is saved on the server as the unique identifier for the socket and node
 4. A control panel is connected to the server.
    1. The control panel gets socket 30002
-5. A second control panel is connected to the server
-   1. The control panel gets socket 30003
+   2. The control panel socket is saved on the server as the unique identifier.
+   3. The server informs all currently connected nodes that a new control panel is connected.
+   4. The node info is sent to the control panel and is displayed on the control panel for the user.
 5. New node connects to server. It has two temperature sensors and no actuators.
    1. This node gets the local socket port of 30004
+   2. Server notifies the node that a control panel exists and asks it to transfer node information.
 6. After 5 seconds, all three nodes broadcast their sensor data
    1. Server parses data from all nodes and sends them to the control panel. Commands created on server:
       1. { "Update", "30000", { "Temp", 20, "deg" }, { "Humidity", 73, "%" }, { "Humidity", 63, "%" }, { "Window", 2, True } }
       2. { "Update", "30001", { "Temp", 21, "deg" }, { "Fan", 2, False }, { "Fan", 3, True }, { "Heater", 4, False } }
       3. { "Update", "30004", { "Temp", 23, "deg" }, { "Temp", 31, "deg" } }
    2. Control panel receives the data and parses the sensor data using the socket ID to map the data to different nodes.
-7. User activates first fan on node 2 from the first control panel. Fan has nodeId=2
+7. User activates first fan on node 2 from the first control panel. Fan has id=2
    1. Control panel creates a command to send to the server
       1. { "Set", "30001:2", True }
-   2. Server receives the command, checks the address of the node and uses the nodeId 2 from the address field to send a new command to the correct node
+   2. Server receives the command, checks the address of the node and uses the id 2 from the address field to send a new command to the correct node
       1. { "Set", "30001:2", True }
    3. Node receives the command and parses the data to actuate the actuator
 8. User presses "turn off all actuators" on second control panel
    1. Control panel creates a command to send to server
-      1. { "Set", "all", False }
-   2. Server receives command and equates address "all" to every node. Server now creates command to set every actuator to off.
-      1. { "SetAll", "30000", False }
-      2. { "SetAll", "30001", False }
-   3. Each node receives command with "SetAll" command and iterates over its own actuators to ensure they are all set to false
-9. Sensor nodes broadcast their state and all control panels are updated from server
+      1. { "Set", "-1", False }
+   2. Server receives command and equates address "-1" to every node. Server now creates command to set every actuator to off.
+      1. { "Set", "30000", False }
+      2. { "Set", "30001", False }
+   3. Each node receives command with "Set" command and iterates over its own actuators to ensure they are all set to false
+9. Sensor nodes broadcast their state and all control panels are updated from server.
 
 ## Reliability and security
 
