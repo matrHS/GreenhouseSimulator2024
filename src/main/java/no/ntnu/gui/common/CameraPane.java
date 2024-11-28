@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Node;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -15,24 +17,29 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import no.ntnu.greenhouse.Camera;
+import no.ntnu.greenhouse.SensorReading;
 
 
 public class CameraPane extends TitledPane {
   private final List<SimpleStringProperty> cameras = new ArrayList<>();
-  private final VBox contentBox = new VBox();
+  private final ScrollPane contentBox = new ScrollPane();
+  private final VBox cameraBox = new VBox();
+
 
   public CameraPane(List<Camera> cameras){
+    super();
     initialize(cameras.stream().map(Camera::getImage).toList());
   }
   public CameraPane(){
     initialize(new LinkedList<>());
   }
-  private void initialize(Iterable<String> images) {
 
+  private void initialize(Iterable<String> images) {
     setText("Cameras");
     images.forEach(image ->
-                        contentBox.getChildren().add(createImageBox(image))
+                       Platform.runLater(() -> cameraBox.getChildren().add(createImageBox(image)))
     );
+    contentBox.setContent(cameraBox);
     setContent(contentBox);
   }
 
@@ -42,9 +49,9 @@ public class CameraPane extends TitledPane {
    * @param images The camera data that has been updated
    */
   public void update(Iterable<String> images) {
-    //int index =0;
+    Platform.runLater(() -> cameraBox.getChildren().clear());
     for (String image : images) {
-      createImageBox(image); //TODO add index here
+      Platform.runLater(() -> cameraBox.getChildren().add(createImageBox(image)));
     }
   }
 
@@ -59,7 +66,7 @@ public class CameraPane extends TitledPane {
   }
 
   private Node createImageBox(String image){
-    String name = "Camera something";
+    String name = "Camera " ;
 
     byte[] imageBytes = Base64.getDecoder().decode(image);
     Image img = new Image(new ByteArrayInputStream(imageBytes));

@@ -198,6 +198,7 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     Logger.infoNoNewline("Node #" + id);
     addRandomNoiseToSensors();
     notifySensorChanges();
+    notifyCameraChanges();
     debugPrint();
   }
 

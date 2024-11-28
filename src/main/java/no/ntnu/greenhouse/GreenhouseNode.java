@@ -336,7 +336,7 @@ public class GreenhouseNode extends TimerTask implements SensorListener, NodeSta
     payload[0] = "camera";
     payload[1] = String.valueOf(socket.getLocalPort());
     for (int i = 0; i < cameras.size(); i++) {
-      payload[i + 2] = cameras.get(i).getId() + ":" + cameras.get(i).getImage();
+      payload[i + 2] = cameras.get(i).getImage();
     }
     this.setCommandQueue(payload);
   }

@@ -107,10 +107,10 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
    */
   private List<Camera> handleCameras(String[] cameraReading) {
     List<Camera> list = new ArrayList<>();
-    if (cameraReading.length > 3) {
+    if (cameraReading.length >= 3) {
       for (int i = 2; i < cameraReading.length; i++) {
         String image = cameraReading[i];
-        int id = Integer.parseInt(cameraReading[0]);
+        int id = Integer.parseInt(cameraReading[1]);
         list.add(new Camera(id, image));
       }
     }
