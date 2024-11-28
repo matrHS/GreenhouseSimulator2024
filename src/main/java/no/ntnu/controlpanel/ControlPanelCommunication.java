@@ -121,6 +121,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
           break;
 
         case "remove":
+          logic.onNodeRemoved(Integer.parseInt(payload[1]));
           break;
 
         case "data":

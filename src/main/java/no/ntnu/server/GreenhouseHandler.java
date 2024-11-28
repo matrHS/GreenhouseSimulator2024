@@ -22,6 +22,7 @@ public class GreenhouseHandler extends Thread {
 
   private LinkedBlockingQueue<String[]> commandQueue;
   private Server server;
+  private int socketAddress;
 
   private ServerLogger logger = ServerLogger.getInstance();
   /**
@@ -38,6 +39,7 @@ public class GreenhouseHandler extends Thread {
       this.inputStream = inputStream;
       this.commandQueue = new LinkedBlockingQueue<>();
       this.server = server;
+      this.socketAddress = socket.getPort();
       socket.setSoTimeout(Config.TIMEOUT);
 
     } catch (IOException e) {
@@ -55,6 +57,7 @@ public class GreenhouseHandler extends Thread {
       receiveCommand();
       sendCommandIfExists();
     }
+    server.putCommandControlPanel(new String[] {"remove", Integer.toString(socketAddress)});
   }
 
   /**

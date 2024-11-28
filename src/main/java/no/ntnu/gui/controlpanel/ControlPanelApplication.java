@@ -146,10 +146,8 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     if (nodeInfo != null) {
       Platform.runLater(() -> {
         forgetNodeInfo(nodeId);
-        if (nodeInfos.isEmpty()) {
-          mainPane.getChildren().clear();
-          mainPane.getChildren().add(new HBox(new Label("No greenhouses found")));
-        }
+        tabPane.getTabs().remove(nodeTabs.get(nodeId));
+        nodeTabs.remove(nodeId);
       });
       logger.info("Greenhouse " + nodeId + " removed");
     } else {
