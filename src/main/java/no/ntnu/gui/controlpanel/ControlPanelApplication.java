@@ -80,22 +80,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
   /**
-   * Create an empty content for the application.
-   *
-   * @return The empty content
-   */
-  private static Label createEmptyContent() {
-    Label l = new Label("Waiting for node data...");
-    l.setAlignment(Pos.CENTER);
-    return l;
-  }
-
-  /**
    * Create an empty sensor pane for the application.
    *
    * @return The empty sensor pane
    */
   private static SensorPane createEmptySensorPane(String title) {
+
     return new SensorPane(title);
   }
 
@@ -126,36 +116,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     logic.setCommunicationChannelListener(this);
     channel.setCommandQueue(commandQueue);
     channel.start();
-  }
-
-  /**
-   * Handle the event when a node is added.
-   *
-   * @param nodeInfo Information about the added node
-   */
-  @Override
-  public void onNodeAdded(SensorActuatorNodeInfo nodeInfo) {
-    Platform.runLater(() -> addNodeTab(nodeInfo));
-  }
-
-  /**
-   * Handle the event when a node is removed.
-   *
-   * @param nodeId ID of the node which has disappeared (removed)
-   */
-  @Override
-  public void onNodeRemoved(int nodeId) {
-    SensorActuatorNodeInfo nodeInfo = nodeInfos.get(nodeId);
-    if (nodeInfo != null) {
-      Platform.runLater(() -> {
-        forgetNodeInfo(nodeId);
-        tabPane.getTabs().remove(nodeTabs.get(nodeId));
-        nodeTabs.remove(nodeId);
-      });
-      Logger.info("Greenhouse " + nodeId + " removed");
-    } else {
-      Logger.error("Can't remove greenhouse " + nodeId);
-    }
   }
 
   /**
@@ -219,6 +179,52 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
 
     return bottomPane;
+  }
+
+  /**
+   * Get the stored actuator.
+   *
+   * @param nodeId     The node ID
+   * @param actuatorId The actuator ID
+   * @return The stored actuator
+   */
+  private Actuator getStoredActuator(int nodeId, int actuatorId) {
+    Actuator actuator = null;
+    SensorActuatorNodeInfo nodeInfo = nodeInfos.get(nodeId);
+    if (nodeInfo != null) {
+      actuator = nodeInfo.getActuator(actuatorId);
+    }
+    return actuator;
+  }
+
+  /**
+   * Handle the event when a node is added.
+   *
+   * @param nodeInfo Information about the added node
+   */
+  @Override
+  public void onNodeAdded(SensorActuatorNodeInfo nodeInfo) {
+    Platform.runLater(() -> addNodeTab(nodeInfo));
+  }
+
+  /**
+   * Handle the event when a node is removed.
+   *
+   * @param nodeId ID of the node which has disappeared (removed)
+   */
+  @Override
+  public void onNodeRemoved(int nodeId) {
+    SensorActuatorNodeInfo nodeInfo = nodeInfos.get(nodeId);
+    if (nodeInfo != null) {
+      Platform.runLater(() -> {
+        forgetNodeInfo(nodeId);
+        tabPane.getTabs().remove(nodeTabs.get(nodeId));
+        nodeTabs.remove(nodeId);
+      });
+      Logger.info("Greenhouse " + nodeId + " removed");
+    } else {
+      Logger.error("Can't remove greenhouse " + nodeId);
+    }
   }
 
   /**
@@ -296,22 +302,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   }
 
   /**
-   * Get the stored actuator.
-   *
-   * @param nodeId     The node ID
-   * @param actuatorId The actuator ID
-   * @return The stored actuator
-   */
-  private Actuator getStoredActuator(int nodeId, int actuatorId) {
-    Actuator actuator = null;
-    SensorActuatorNodeInfo nodeInfo = nodeInfos.get(nodeId);
-    if (nodeInfo != null) {
-      actuator = nodeInfo.getActuator(actuatorId);
-    }
-    return actuator;
-  }
-
-  /**
    * Forget the node info.
    *
    * @param nodeId The node ID to forget
@@ -320,20 +310,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     sensorPanes.remove(nodeId);
     actuatorPanes.remove(nodeId);
     nodeInfos.remove(nodeId);
-  }
-
-  /**
-   * Add a node.
-   *
-   * @param nodeInfo Information about the added node
-   */
-  private void addNode(SensorActuatorNodeInfo nodeInfo) {
-    if (nodeInfos.get(nodeInfo.getId()) == null) {
-      nodeInfos.put(nodeInfo.getId(), nodeInfo);
-
-    } else {
-      Logger.info("Duplicate node spawned, ignore it");
-    }
   }
 
   /**
@@ -362,7 +338,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    * @return The created node tab
    */
   private Tab createNodeTab(SensorActuatorNodeInfo nodeInfo) {
-    Tab tab = new Tab("Node " + nodeInfo.getId());
+    Tab tab = new Tab("Greenhouse " + nodeInfo.getId());
 
     SensorPane sensorPane = createEmptySensorPane("Sensors");
     sensorPanes.put(nodeInfo.getId(), sensorPane);
@@ -377,15 +353,31 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     aggregatePanes.put(nodeInfo.getId(), aggregatePane);
 
     VBox greenhuose = new VBox(sensorPane, actuatorPane, cameraPane, aggregatePane);
+    greenhuose.setMaxWidth(700);
+    greenhuose.setMinWidth(700);
     Screen screen = Screen.getPrimary();
     Rectangle2D bounds = screen.getVisualBounds();
     greenhuose.setMinWidth(bounds.getWidth());
     greenhuose.setMaxWidth(bounds.getWidth());
     ScrollPane scrollPane = new ScrollPane(greenhuose);
+    scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
     tab.setContent(scrollPane);
 
     nodeTabs.put(nodeInfo.getId(), tab);
     return tab;
+  }
+
+  /**
+   * Put a command on the queue
+   *
+   * @param payload The command to put on the queue
+   */
+  private void putOnCommandQueue(String[] payload) {
+    try {
+      commandQueue.put(payload);
+    } catch (InterruptedException e) {
+      Logger.info("failed to put command on queue.");
+    }
   }
 
   /**
@@ -396,16 +388,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     Logger.info("Communication closed, closing the GUI");
     Platform.runLater(Platform::exit);
   }
-
-
-  private void putOnCommandQueue(String[] payload) {
-    try {
-      commandQueue.put(payload);
-    } catch (InterruptedException e) {
-      Logger.info("failed to put command on queue.");
-    }
-  }
-
 
   /**
    * Handle the event when an actuator is changed.

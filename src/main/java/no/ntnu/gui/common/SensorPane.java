@@ -52,10 +52,8 @@ public class SensorPane extends TitledPane {
     sensors.forEach(sensor ->
                         contentBox.getChildren().add(createAndRememberSensorLabel(sensor))
     );
-    //contentBox.getStyleClass().add("sensor-pane");
-    ScrollPane scrollPane = new ScrollPane(contentBox);
-    scrollPane.getStyleClass().add("sensor-pane");
-    setContent(scrollPane);
+    contentBox.getStyleClass().add("sensor-pane");
+    setContent(contentBox);
   }
 
   /**
@@ -89,7 +87,9 @@ public class SensorPane extends TitledPane {
   }
 
   private String generateSensorText(SensorReading sensor) {
-    return sensor.getType() + ": " + sensor.getFormatted();
+    String sensorType = sensor.getType();
+    sensorType = sensorType.substring(0, 1).toUpperCase() + sensorType.substring(1);
+    return sensorType + ": " + sensor.getFormatted();
   }
 
   private void updateSensorLabel(SensorReading sensor, int index) {

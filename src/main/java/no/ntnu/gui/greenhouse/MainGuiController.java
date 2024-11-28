@@ -25,17 +25,6 @@ public class MainGuiController {
   }
 
   /**
-   * Get the greenhouse window.
-   *
-   * @param node The node to get the greenhouse window for
-   * @return The greenhouse window
-   */
-  public Tab getGreenhouseWindow(SensorActuatorNode node) {
-    GreenhouseWindow greenhouseWindow = new GreenhouseWindow(this, node);
-    return greenhouseWindow.getGreenhouseTab();
-  }
-
-  /**
    * Get the home tab.
    *
    * @return The home tab

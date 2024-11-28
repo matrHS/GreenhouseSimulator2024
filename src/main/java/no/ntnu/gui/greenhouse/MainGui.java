@@ -1,21 +1,12 @@
 package no.ntnu.gui.greenhouse;
 
 import java.util.Objects;
-import javafx.geometry.HPos;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
+import javafx.geometry.Pos;
 import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
-import javafx.stage.Screen;
 import no.ntnu.tools.Logger;
 
 /**
@@ -52,7 +43,6 @@ public class MainGui {
     mainScene.getStyleClass().add("main-center-pane");
 
     mainScene.setCenter(createCenterPane());
-    mainScene.setRight(new HBox());
     return new Tab("Home Page", mainScene);
   }
 
@@ -68,13 +58,12 @@ public class MainGui {
     try {
       Image greenhouseDrawing = new Image(
           Objects.requireNonNull(getClass().getResource(
-              "/images/Greenhouse2.jpg")).toExternalForm());
+              "/images/GreenhouseMain.jpg")).toExternalForm());
       ImageView mainImage = new ImageView(greenhouseDrawing);
 
-      mainImage.getStyleClass().add("main-image");
-      GridPane.setHalignment(mainImage, HPos.CENTER);
-      centerPane.getChildren().add(mainImage);
 
+      centerPane.getChildren().add(mainImage);
+      centerPane.setAlignment(Pos.CENTER);
     } catch (Exception e) {
       System.out.println("error:" + e.getMessage());
     }
