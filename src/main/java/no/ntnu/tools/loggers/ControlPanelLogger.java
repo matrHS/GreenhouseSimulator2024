@@ -1,7 +1,5 @@
 package no.ntnu.tools.loggers;
 
-import no.ntnu.tools.loggers.GenericLogger;
-
 /**
  * Represents a logger for the controlPanel.
  * This class is a singleton.
@@ -9,7 +7,11 @@ import no.ntnu.tools.loggers.GenericLogger;
  */
 public class ControlPanelLogger extends GenericLogger {
 
-  private static  ControlPanelLogger singleInstance = null;
+  private static ControlPanelLogger singleInstance = null;
+
+  private ControlPanelLogger() {
+    this.init("controlPanelLog");
+  }
 
   /**
    * Get the instance of the ControlPanelLogger.
@@ -21,10 +23,6 @@ public class ControlPanelLogger extends GenericLogger {
       singleInstance = new ControlPanelLogger();
     }
     return singleInstance;
-  }
-
-  private ControlPanelLogger() {
-    this.init("controlPanelLog");
   }
 
 }

@@ -130,7 +130,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     scene.getStylesheets().add(getClass().getResource("/css/stylesheet.css").toExternalForm());
     stage.getIcons().add(new Image(
         Objects.requireNonNull(getClass().getResource("/images/Frokostklubben.jpg"))
-               .toExternalForm()));
+            .toExternalForm()));
     stage.setScene(scene);
     stage.setResizable(false);
     stage.show();

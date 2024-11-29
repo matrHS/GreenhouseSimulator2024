@@ -1,14 +1,16 @@
 package no.ntnu.tools.loggers;
 
-import no.ntnu.tools.loggers.GenericLogger;
-
 /**
  * Represents a logger for a greenhouse.
  * This class is a singleton.
  * It is used to log messages from the greenhouse.
  */
 public class GreenhouseLogger extends GenericLogger {
-  private static  GreenhouseLogger singleInstance = null;
+  private static GreenhouseLogger singleInstance = null;
+
+  private GreenhouseLogger() {
+    this.init("greenhouseLog");
+  }
 
   /**
    * Get the instance of the GreenhouseLogger.
@@ -21,9 +23,5 @@ public class GreenhouseLogger extends GenericLogger {
       singleInstance = new GreenhouseLogger();
     }
     return singleInstance;
-  }
-
-  private GreenhouseLogger() {
-    this.init("greenhouseLog");
   }
 }

@@ -1,16 +1,18 @@
 package no.ntnu.tools.loggers;
 
-import no.ntnu.tools.loggers.GenericLogger;
 
 /**
  * Represents a logger for the server.
  * This class is a singleton.
  * It is used to log messages from the server.
- *
  */
 
 public class ServerLogger extends GenericLogger {
-  private static  ServerLogger singleInstance = null;
+  private static ServerLogger singleInstance = null;
+
+  private ServerLogger() {
+    this.init("serverLog");
+  }
 
   /**
    * Get the instance of the ServerLogger.
@@ -22,10 +24,6 @@ public class ServerLogger extends GenericLogger {
       singleInstance = new ServerLogger();
     }
     return singleInstance;
-  }
-
-  private ServerLogger() {
-    this.init("serverLog");
   }
 
 }

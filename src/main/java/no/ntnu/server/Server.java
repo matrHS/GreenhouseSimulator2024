@@ -151,7 +151,7 @@ public class Server {
 
       if (type.equals("cp")) {
         ControlPanelHandler handler = new ControlPanelHandler(socket, outputStream, inputStream,
-                                                              this);
+            this);
         controlPanels.put(socket.getPort(), handler);
         handler.start();
         logger.info("new control panel connected");

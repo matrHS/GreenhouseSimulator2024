@@ -22,6 +22,7 @@ public class GreenhouseHandler extends Thread {
   private int socketAddress;
 
   private ServerLogger logger = ServerLogger.getInstance();
+
   /**
    * Constructor for the GreenhouseHandler.
    *

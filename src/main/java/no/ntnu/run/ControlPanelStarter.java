@@ -76,7 +76,7 @@ public class ControlPanelStarter {
     spawner.spawnNode("1", startDelay + 1);
     spawner.spawnNode("1", startDelay + 2);
     spawner.advertiseSensorData("4;temperature=27.4 °C,temperature=26.8 °C,humidity=80 %",
-                                startDelay + 2);
+        startDelay + 2);
     spawner.spawnNode("8;2_heater", startDelay + 3);
     spawner.advertiseActuatorState(4, 1, true, startDelay + 3);
     spawner.advertiseActuatorState(4, 1, false, startDelay + 4);
@@ -87,16 +87,16 @@ public class ControlPanelStarter {
     spawner.advertiseActuatorState(4, 1, true, startDelay + 7);
     spawner.advertiseActuatorState(4, 2, true, startDelay + 8);
     spawner.advertiseSensorData("4;temperature=22.4 °C,temperature=26.0 °C,humidity=81 %",
-                                startDelay + 9);
+        startDelay + 9);
     spawner.advertiseSensorData("1;humidity=80 %,humidity=82 %", startDelay + 10);
     spawner.advertiseRemovedNode(8, startDelay + 11);
     spawner.advertiseRemovedNode(8, startDelay + 12);
     spawner.advertiseSensorData("1;temperature=25.4 °C,temperature=27.0 °C,humidity=67 %",
-                                startDelay + 13);
+        startDelay + 13);
     spawner.advertiseSensorData("4;temperature=25.4 °C,temperature=27.0 °C,humidity=82 %",
-                                startDelay + 14);
+        startDelay + 14);
     spawner.advertiseSensorData("4;temperature=25.4 °C,temperature=27.0 °C,humidity=82 %",
-                                startDelay + 16);
+        startDelay + 16);
     return spawner;
   }
 }
