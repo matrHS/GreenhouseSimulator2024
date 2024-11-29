@@ -51,14 +51,14 @@ incoming packets? Perhaps split into several subsections, where each subsection 
 node type (For example: one subsection for sensor/actuator nodes, one for control panel nodes). -->
 
 <!--TODO - Expand -->
-
+![ServerFlowChart.drawio.png](images%2FServerFlowChart.drawio.png)
 For sensor data the data should be buffered and sent in "bulks" to the server. If the temperature rises too fast the
 server should be notified immediately. Sensor nodes periodically sends buffered sensor data every 30 seconds to reduce
 congestion on the network. There should also be aggregate data like avg, etc. included in the sent data.
 
 Sensor data from the Node is sent to the server when the sensor data is updated.
-The server updates all connected control panels with the newly acquired sensor data.  
-![ServerFlowChart.drawio.png](images%2FServerFlowChart.drawio.png)
+The server updates all connected control panels with the newly acquired sensor data.
+
 ## Connection and state
 
 <!-- TODO - is your communication protocol connection-oriented or connection-less? Is it stateful or 
