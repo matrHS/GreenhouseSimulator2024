@@ -9,7 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * A fake communication channel. Emulates the node discovery (over the Internet).

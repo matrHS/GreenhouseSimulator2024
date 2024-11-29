@@ -12,10 +12,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.tools.ControlPanelLogger;
-import no.ntnu.tools.RSA;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.RSA;
+import no.ntnu.tools.loggers.ControlPanelLogger;
+
+
+
 
 /**
  * The communication channel for the control panel. It communicates with the server and sends

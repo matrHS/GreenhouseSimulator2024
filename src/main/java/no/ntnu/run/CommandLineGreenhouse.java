@@ -1,7 +1,7 @@
 package no.ntnu.run;
 
 import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * Run a greenhouse simulation using command-line interface (no GUI).

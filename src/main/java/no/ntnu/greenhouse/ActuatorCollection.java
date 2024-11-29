@@ -3,7 +3,7 @@ package no.ntnu.greenhouse;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * A collection of actuators of different types.

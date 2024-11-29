@@ -7,10 +7,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import no.ntnu.tools.ControlPanelLogger;
-import no.ntnu.tools.Logger;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.ServerLogger;
+import no.ntnu.tools.loggers.ServerLogger;
 
 
 /**

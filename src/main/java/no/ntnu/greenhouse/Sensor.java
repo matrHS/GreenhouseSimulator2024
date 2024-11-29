@@ -108,7 +108,7 @@ public class Sensor {
   }
 
   /**
-   * Get the reading to string
+   * Get the reading to string.
    */
   @Override
   public String toString() {

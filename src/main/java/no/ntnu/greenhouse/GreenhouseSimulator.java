@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * Application entrypoint - a simulator for a greenhouse.

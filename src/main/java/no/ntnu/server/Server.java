@@ -7,8 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.ControlPanelLogger;
-import no.ntnu.tools.ServerLogger;
+import no.ntnu.tools.loggers.ServerLogger;
 
 
 /**

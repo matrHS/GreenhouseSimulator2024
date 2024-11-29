@@ -17,10 +17,9 @@ import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CameraListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
-import no.ntnu.tools.GreenhouseLogger;
-import no.ntnu.tools.RSA;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.RSA;
+import no.ntnu.tools.loggers.GreenhouseLogger;
 
 /**
  * The GreenhouseNode class is responsible for handling the communication between the greenhouse and
@@ -215,9 +214,9 @@ public class GreenhouseNode extends TimerTask
       logger.error(e.toString());
     } catch (SocketTimeoutException e) {
     } catch (IOException e) {
-      Logger.error("Failed to read");
+      logger.error("Failed to read");
     } catch (ClassNotFoundException e) {
-      Logger.error("Wrong type of object");
+      logger.error("Wrong type of object");
     }
   }
 

@@ -8,7 +8,7 @@ import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
-import no.ntnu.tools.ControlPanelLogger;
+import no.ntnu.tools.loggers.ControlPanelLogger;
 
 /**
  * The central logic of a control panel node. It uses a communication channel to send commands

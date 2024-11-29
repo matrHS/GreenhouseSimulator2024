@@ -5,9 +5,9 @@ import no.ntnu.greenhouse.Camera;
 
 /**
  * Listener for camera sensor update events.
- * This will (probably) be usable only on the camera/sensor/actuator node (greenhouse) side, where the
- * real sensor objects are available. The control panel side has only camera sensor reading values
- * available, not the camera sensors themselves.
+ * This will (probably) be usable only on the camera/sensor/actuator node (greenhouse) side,
+ * where the real sensor objects are available. The control panel side has only camera sensor
+ * reading values available, not the camera sensors themselves.
  */
 public interface CameraListener {
 
