@@ -42,8 +42,8 @@ are connected to the server similarly to the greenhouse nodes. Both control pane
 indetified by their local socket port, since its not possible for two sockets to use the same port. Disconnected ports
 are also removed so in the edge case of the same port being used after another closed, they are not mistaken for each
 other.
-![Untitled Diagram.drawio.png](..%2F..%2F..%2F..%2FDownloads%2FUntitled%20Diagram.drawio.png)
 
+![ServerDiagramWhiteBG.png](images%2FServerDiagramWhiteBG.png)
 ## The flow of information and events
 
 <!--TODO - describe what each network node does and when. Some periodic events? Some reaction on 
@@ -51,15 +51,14 @@ incoming packets? Perhaps split into several subsections, where each subsection 
 node type (For example: one subsection for sensor/actuator nodes, one for control panel nodes). -->
 
 <!--TODO - Expand -->
-![ServerFlowChart.drawio.png](..%2F..%2F..%2F..%2FDownloads%2FServerFlowChart.drawio.png)
 
 For sensor data the data should be buffered and sent in "bulks" to the server. If the temperature rises too fast the
 server should be notified immediately. Sensor nodes periodically sends buffered sensor data every 30 seconds to reduce
 congestion on the network. There should also be aggregate data like avg, etc. included in the sent data.
 
 Sensor data from the Node is sent to the server when the sensor data is updated.
-The server updates all connected control panels with the newly acquired sensor data.
-
+The server updates all connected control panels with the newly acquired sensor data.  
+![ServerFlowChart.drawio.png](images%2FServerFlowChart.drawio.png)
 ## Connection and state
 
 <!-- TODO - is your communication protocol connection-oriented or connection-less? Is it stateful or 
