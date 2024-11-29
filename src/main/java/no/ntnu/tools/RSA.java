@@ -38,7 +38,7 @@ public class RSA {
    * Decrypts a payload using the provided keys.
    *
    * @param payload The payload to decrypt
-   * @param keys   The keys to use for decryption
+   * @param keys    The keys to use for decryption
    * @return The decrypted payload
    */
   public static String[] decrypt(String[] payload, BigInteger[] keys) {

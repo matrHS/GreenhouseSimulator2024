@@ -1,7 +1,7 @@
 package no.ntnu.run;
 
 
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * Starter for GUI version of the greenhouse simulator.

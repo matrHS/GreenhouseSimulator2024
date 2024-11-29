@@ -2,12 +2,10 @@ package no.ntnu.gui.common;
 
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.TitledPane;
@@ -49,7 +47,7 @@ public class CameraPane extends TitledPane {
   private void initialize(Iterable<String> images) {
     setText("Cameras");
     images.forEach(image ->
-                       Platform.runLater(() -> contentBox.getChildren().add(createImageBox(image)))
+        Platform.runLater(() -> contentBox.getChildren().add(createImageBox(image)))
     );
     contentBox.setAlignment(Pos.TOP_LEFT);
     contentBox.getStyleClass().add("camera-scroll-pane");

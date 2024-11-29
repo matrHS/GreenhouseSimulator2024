@@ -7,8 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.ControlPanelLogger;
-import no.ntnu.tools.ServerLogger;
+import no.ntnu.tools.loggers.ServerLogger;
 
 
 /**
@@ -152,7 +151,7 @@ public class Server {
 
       if (type.equals("cp")) {
         ControlPanelHandler handler = new ControlPanelHandler(socket, outputStream, inputStream,
-                                                              this);
+            this);
         controlPanels.put(socket.getPort(), handler);
         handler.start();
         logger.info("new control panel connected");

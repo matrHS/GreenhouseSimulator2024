@@ -7,8 +7,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.ControlPanelLogger;
-import no.ntnu.tools.ServerLogger;
+import no.ntnu.tools.loggers.ServerLogger;
 
 /**
  * The greenhouse handler class. This class
@@ -23,11 +22,13 @@ public class GreenhouseHandler extends Thread {
   private int socketAddress;
 
   private ServerLogger logger = ServerLogger.getInstance();
+
   /**
    * Constructor for the GreenhouseHandler.
    *
    * @param clientSocket The greenhouse client socket
    */
+
   public GreenhouseHandler(Socket clientSocket, ObjectOutputStream outputStream,
                            ObjectInputStream inputStream, Server server) {
     this.socket = clientSocket;
@@ -59,9 +60,9 @@ public class GreenhouseHandler extends Thread {
   }
 
   /**
-   * Set a command to be sent to the control panel
+   * Set a command to be sent to the control panel.
    *
-   * @param commands The command to be sent
+   * @param commands The command to be sent.
    */
   public void setCommand(String[] commands) {
     try {
@@ -92,7 +93,6 @@ public class GreenhouseHandler extends Thread {
     try {
       String[] command = (String[]) inputStream.readObject();
       server.putCommandControlPanel(command);
-
     } catch (SocketTimeoutException e) {
     } catch (IOException e) {
       server.closeSocket(server.getNodeMap(), this.socket);

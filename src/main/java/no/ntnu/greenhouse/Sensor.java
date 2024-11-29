@@ -49,7 +49,7 @@ public class Sensor {
    */
   public Sensor createClone() {
     return new Sensor(this.reading.getType(), this.min, this.max,
-                      this.reading.getValue(), this.reading.getUnit());
+        this.reading.getValue(), this.reading.getUnit());
   }
 
   /**
@@ -108,7 +108,7 @@ public class Sensor {
   }
 
   /**
-   * Get the reading to string
+   * Get the reading to string.
    */
   @Override
   public String toString() {

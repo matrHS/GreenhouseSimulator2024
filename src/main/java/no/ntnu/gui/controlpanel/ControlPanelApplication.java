@@ -38,8 +38,8 @@ import no.ntnu.gui.greenhouse.MainGuiController;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.controlpanel.ActuatorChangedListener;
 import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
-import no.ntnu.tools.ControlPanelLogger;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.ControlPanelLogger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * Run a control panel with a graphical user interface (GUI), with JavaFX.
@@ -72,12 +72,13 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    * @param channel The communication channel
    */
   public static void startApp(ControlPanelLogic logic, CommunicationChannel channel) {
-    ControlPanelLogger logger = ControlPanelLogger.getInstance();
+
     if (logic == null) {
       throw new IllegalArgumentException("Control panel logic can't be null");
     }
     ControlPanelApplication.logic = logic;
     ControlPanelApplication.channel = (ControlPanelCommunication) channel;
+    ControlPanelLogger logger = ControlPanelLogger.getInstance();
     logger.info("Running control panel GUI...");
     launch();
   }

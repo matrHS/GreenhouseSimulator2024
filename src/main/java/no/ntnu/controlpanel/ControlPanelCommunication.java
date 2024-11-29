@@ -12,10 +12,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.tools.ControlPanelLogger;
-import no.ntnu.tools.RSA;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.RSA;
+import no.ntnu.tools.loggers.ControlPanelLogger;
+
 
 /**
  * The communication channel for the control panel. It communicates with the server and sends
@@ -138,7 +138,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
               new SensorActuatorNodeInfo(Integer.parseInt(payload[1]));
           for (int i = 2; i < payload.length; i += 3) {
             Actuator actuator = new Actuator(Integer.parseInt(payload[i + 1]), payload[i],
-                                             Integer.parseInt(payload[1]));
+                Integer.parseInt(payload[1]));
             Boolean state = Boolean.parseBoolean(payload[i + 2]);
             actuator.set(state);
 
@@ -292,7 +292,7 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   /**
    * Send actuator toggle change to the server.
    *
-   * @param nodeId   The node ID
+   * @param nodeId     The node ID
    * @param actuatorId The actuator ID
    */
   private void sentActuatorToggle(int nodeId, int actuatorId) {

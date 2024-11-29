@@ -9,7 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * A fake communication channel. Emulates the node discovery (over the Internet).
@@ -58,7 +58,7 @@ public class FakeCommunicationChannel implements CommunicationChannel {
       throw new IllegalArgumentException("Invalid actuator info format: " + s);
     }
     int actuatorCount = parseIntegerOrError(actuatorInfo[0],
-                                            "Invalid actuator count: " + actuatorInfo[0]);
+        "Invalid actuator count: " + actuatorInfo[0]);
     String actuatorType = actuatorInfo[1];
     for (int i = 0; i < actuatorCount; ++i) {
       Actuator actuator = new Actuator(actuatorType, info.getId());
@@ -183,7 +183,7 @@ public class FakeCommunicationChannel implements CommunicationChannel {
   public void sendActuatorChange(int nodeId, int actuatorId, boolean isOn) {
     String state = isOn ? "ON" : "off";
     Logger.info("Sending command to greenhouse: turn " + state + " actuator"
-                + "[" + actuatorId + "] on node " + nodeId);
+        + "[" + actuatorId + "] on node " + nodeId);
   }
 
   @Override

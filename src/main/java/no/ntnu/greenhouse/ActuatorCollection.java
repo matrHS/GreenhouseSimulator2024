@@ -3,7 +3,7 @@ package no.ntnu.greenhouse;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * A collection of actuators of different types.
@@ -17,7 +17,7 @@ public class ActuatorCollection implements Iterable<Actuator> {
   public void debugPrint() {
     for (Actuator actuator : actuators.values()) {
       Logger.infoNoNewline(" " + actuator.getType() + "[" + actuator.getId() + "]"
-                           + (actuator.isOn() ? " ON" : " off"));
+          + (actuator.isOn() ? " ON" : " off"));
     }
   }
 

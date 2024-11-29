@@ -10,7 +10,7 @@ import no.ntnu.listeners.common.CameraListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * Represents one node with sensors and actuators.

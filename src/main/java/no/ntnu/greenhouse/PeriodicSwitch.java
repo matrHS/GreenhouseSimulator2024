@@ -2,7 +2,7 @@ package no.ntnu.greenhouse;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * A dummy switch which periodically turns an actuator on and off. Used for manual testing.

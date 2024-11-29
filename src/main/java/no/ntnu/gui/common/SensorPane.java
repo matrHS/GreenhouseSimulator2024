@@ -10,7 +10,7 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import no.ntnu.greenhouse.Sensor;
 import no.ntnu.greenhouse.SensorReading;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.loggers.Logger;
 
 /**
  * A section of GUI displaying sensor data.
@@ -50,12 +50,12 @@ public class SensorPane extends TitledPane {
    * Initialize the sensor pane.
    *
    * @param sensors The sensor data to display.
-   * @param title The title of the pane
+   * @param title   The title of the pane
    */
   private void initialize(Iterable<SensorReading> sensors, String title) {
     setText(title);
     sensors.forEach(sensor ->
-                        contentBox.getChildren().add(createAndRememberSensorLabel(sensor))
+        contentBox.getChildren().add(createAndRememberSensorLabel(sensor))
     );
     contentBox.getStyleClass().add("sensor-pane");
     setContent(contentBox);
@@ -113,7 +113,7 @@ public class SensorPane extends TitledPane {
    * Update a sensor label with new sensor data.
    *
    * @param sensor The new sensor data
-   * @param index The index of the sensor in the list
+   * @param index  The index of the sensor in the list
    */
   private void updateSensorLabel(SensorReading sensor, int index) {
     if (sensorProps.size() > index) {

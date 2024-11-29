@@ -7,10 +7,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import no.ntnu.tools.ControlPanelLogger;
-import no.ntnu.tools.Logger;
 import no.ntnu.tools.Config;
-import no.ntnu.tools.ServerLogger;
+import no.ntnu.tools.loggers.ServerLogger;
 
 
 /**
@@ -20,7 +18,7 @@ import no.ntnu.tools.ServerLogger;
 public class ControlPanelHandler extends Thread {
   private final Socket socket;
   private final String[] allowedCommands = new String[] {"set", "get", "add", "remove", "data",
-                                                         "state", "update", "camera"};
+      "state", "update", "camera"};
   private ObjectOutputStream outputStream;
   private ObjectInputStream inputStream;
   private AtomicReference<String[]> cmdStack;
