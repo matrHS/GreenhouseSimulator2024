@@ -60,10 +60,6 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
     }
   }
 
-  @Override
-  public boolean open() {
-    return false;
-  }
 
   /**
    * Opens a communication socket with the remote server and sets up the input and output streams.

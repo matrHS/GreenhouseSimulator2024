@@ -10,7 +10,6 @@ import no.ntnu.gui.controlpanel.ControlPanelApplication;
  */
 public class MainGuiController {
 
-  private static Map<Integer, SensorActuatorNode> nodes;
   private ControlPanelApplication mainWindow;
   private MainGui mainPage;
 

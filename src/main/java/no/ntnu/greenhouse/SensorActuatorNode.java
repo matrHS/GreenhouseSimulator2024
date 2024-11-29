@@ -398,16 +398,6 @@ public class SensorActuatorNode extends TimerTask
     }
   }
 
-  /**
-   * Set all actuators to desired state.
-   *
-   * @param on Whether the actuators should be on (true) or off (false)
-   */
-  public void setAllActuators(boolean on) {
-    for (Actuator actuator : actuators) {
-      actuator.set(on);
-    }
-  }
 
   /**
    * Run the scheduled task.

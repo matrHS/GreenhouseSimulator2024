@@ -15,10 +15,4 @@ public interface CommunicationChannel {
    */
   void sendActuatorChange(int nodeId, int actuatorId, boolean isOn);
 
-  /**
-   * Open the communication channel.
-   *
-   * @return True when the communication channel is successfully opened, false on error
-   */
-  boolean open();
 }
