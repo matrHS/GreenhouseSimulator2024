@@ -107,11 +107,11 @@ public class Server {
   /**
    * Run the server, and handle the client.
    */
-  @SuppressWarnings("all")
   public void run() {
     logger.info("server starting");
     logger.info("Running on port: " + serverSocket.getLocalPort());
-    while (true) {
+    boolean running = true;
+    while (running) {
       Socket socket = acceptNextClient();
       logger.info("Connected to: " + socket.getPort());
       logger.info("holding sockets for: " + greenHouseSockets.keySet() + " and "

@@ -90,7 +90,6 @@ public class DeviceFactory {
 
   /**
    * Create a typical camera.
-   * TODO: Move this to camera instead of factory as instantiating cameras is not good
    *
    * @param nodeId ID of the node to which this camera will be connected
    * @return The camera

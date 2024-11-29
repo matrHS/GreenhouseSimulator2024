@@ -26,22 +26,22 @@ choose this transport layer protocol? -->
 The underlying transport-layer protocol is TCP, this ensures a reliable information transfer. It is important that the
 greenhouse information arrives before the node readings and actuator state information, so that the elements of the GUI
 can be built and handle the information. Without TCP we would not be able to ensure reliable and ordered transfer of
-information. The main server in our application uses TCP ort 1238, while the socket connections too it use dynamically
-assigned ports.
+information. The main server in our application uses TCP or 1238, whilst socket connections use dynamically
+assigned ports at the time of connection.
 
 ## The architecture
 
 <!--TODO - show the general architecture of your network. Which part is a server? Who are clients? 
 Do you have one or several servers? Perhaps include a picture here. -->
 
-This program treats each greenhouse as a separate node with multiple sensors and actuators connected to it. The server
+This protocol treats each greenhouse as a separate node with multiple sensors and actuators connected to it. The server
 is able to handle a large amount of greenhouses. The greenhouses interfaces with a handler that is contained on a
 singular
-discrete server. From the server commands are sent to and from the greenhouse nodes and control panels. control panels
+discrete server. From the server, commands are sent to and from the greenhouse nodes and control panels. control panels
 are connected to the server similarly to the greenhouse nodes. Both control panels and greenhouses are uniquely
-indetified by their local socket port, since its not possible for two sockets to use the same port. Disconnected ports
-are also removed so in the edge case of the same port being used after another closed, they are not mistaken for each
-other.
+indetified on the server by their local socket port, since it's not possible for two sockets to use the same port. 
+Disconnected ports are also removed so in the edge case of the same port being used after another closed, 
+they are not mistaken for each other.
 
 ![ServerDiagramWhiteBG.png](images%2FServerDiagramWhiteBG.png)
 ## The flow of information and events
@@ -50,28 +50,35 @@ other.
 incoming packets? Perhaps split into several subsections, where each subsection describes one 
 node type (For example: one subsection for sensor/actuator nodes, one for control panel nodes). -->
 
-<!--TODO - Expand -->
+The server is the central hub of the network. It handles all incoming and outgoing messages from the sensor nodes and
+control panels. The server is responsible for sending the sensor data to the control panels and sending the actuator
+commands to the greenhouse nodes. 
+The server also handles the connection and disconnection of the sensor nodes and control panels.  
+When a sensor node
+is connected, any sensor changes queues up a command containing sensor data to be sent to the server. The server then
+sends this data to the control panels where the control panel parses all the sensor and actuator data into a graphical
+interface.  
+When a control panel is connected, the server asks all nodes to send an information package containing all the sensor
+and actuator data needed to build a "base" structure for the sensors. The control panel will then wait to receive 
+sensor data from the server. If a user toggles or sets an actuator from the control panel, the control panel sends a
+command to the server with identification to what actuator or actuators to change.
+
 ![ServerFlowChart.drawio.png](images%2FServerFlowChart.drawio.png)
-For sensor data the data should be buffered and sent in "bulks" to the server. If the temperature rises too fast the
-server should be notified immediately. Sensor nodes periodically sends buffered sensor data every 30 seconds to reduce
-congestion on the network. There should also be aggregate data like avg, etc. included in the sent data.
-
-Sensor data from the Node is sent to the server when the sensor data is updated.
-The server updates all connected control panels with the newly acquired sensor data.
-
 ## Connection and state
 
 <!-- TODO - is your communication protocol connection-oriented or connection-less? Is it stateful or 
 stateless? -->
-The application uses a connection-oriented protocol. It is a stateful communication due to the sensors holding its own
-data if the server disconnects.
+The application uses a connection-oriented protocol as nodes and control panels will connect to the server and stay
+connected until they disconnect. The server is stateful as it keeps track of all connected nodes and control panels, 
+however once a node or control panel disconnects, the server will remove the connection from its list of connected.  
+
 
 ## Types, constants
 
 <!--TODO - Do you have some specific value types you use in several messages? They you can describe 
 them here. --> 
 The config class contains all the current constants, which are the socket timeout timer, the server TCP port and
-address.
+address. All messages are structured as string arrays.
 
 ## Message format
 
@@ -84,14 +91,16 @@ functions as both a destination and source address. When sending from the contro
 target for actions to be performed on, while when receiving information from the greenhouse, this slot is used to
 identify which node the information is sent from. In the case of actuators being toggled or set, the actuator ID is
 appended to the node id with a colon separating them. This slot can also be used to broadcast, in which case it is set
-to -1.
+to -1 for broadcasting to all greenhouses. The actuator ID can also be used for multicasting by setting the actuator ID
+to -1.  
+The server does not process the commands, it only forwards them to the correct node or control panel.
 
 From slot 3 and onward is the information actually being transmitted. This part can contain a variety information and
 is also end-to-end encrypted using a rudimentary RSA encryption.
 
 **Current usable commands are:**   
-Server side: "add", "data", "state", "info"  
-Client side: "set", "toggle"
+Greenhouse Node commands: "add", "remove", "data", "state", "aggregate", "camera"  
+Control panel commands: "set", "toggle", "info"
 
 **command structures**:  
 adding a node to the server.  
@@ -99,24 +108,41 @@ adding a node to the server.
 here the third slot is the type of actuator, the fourth slot its ID and the fifth slot its state, then the pattern
 repeats
 
+
+Removing a node from the server.  
+{"remove", "nodeId"}
+Used to remove the node from the control panel if the connection is closed.
+
 Sending reading data to the control panel.  
 {"data", "nodeId", "sensorType=type, value=value, unit=unit",...., "sensorType=type, value=value, unit=unit"}   
 This method of transmitting information works slightly differently, instead of each value being in its own string,
 the entire string contains alle the information for a given sensor.
 
 Changing the state of an actuator on the control panel.  
-{"state", "nodeId:actuatorId", "actuatorType","actuatorState"}
+{"state", "nodeId:actuatorId", "actuatorType","actuatorState"}  
+Used to reflect changes in the actuator state on the control panel so it matches the actual state on the node.
+
+60 second aggregate sensor data
+{"aggregate", "nodeId", "sensorType=type, value=value, unit=unit",...., "sensorType=type, value=value, unit=unit"}  
+Node calculates and sends the average of all sensor data for the last 60 seconds to the control panels.
+
+Transfer camera feed to control panel.  
+{"camera", "nodeId", "imageData"}  
+Used to transfer camera feed from the node to the control panel.
 
 Setting the state of an actuator in a greenhouse:  
-{"set", "nodeId:actuatorId","desiredState"}
+{"set", "nodeId:actuatorId","desiredState"}  
+Sets given node to desired state
 
 Toggling the state of an actuator in a greenhouse:  
 {"toggle", "nodeId:actuatorId"}
+Sets actuator to the opposite of its current state.
 
 getting all information from all nodes (sent by the server whenever a control panel connects)  
 {"info","broadcastCode"}  
 The general purpose broadcast code is set to -1 as it is not possible for a socket connection to have a port number of
 -1
+
 
 **Command examples:**   
 Setting the second actuator on node 35124 to be on.  
@@ -128,16 +154,22 @@ Getting all info of all nodes:
 Adding a node to the control panel:  
 {"add", "23423","window", "1", "true", "fan", "2", "false"}
 
+Multicast toggle actuators to specific node:  
+{"toggle", "35124:-1"}
+
+Broadcast toggle to all actuators:  
+{"toggle", "-1:-1"}
+
 ### Error messages
 
 <!--TODO - describe the possible error messages that nodes can send in your system. -->
 
-If the command or state is incorrect, the server should be notified about the error. If the data is incorrectly
-formatted,
-it should be rejected and an error should be thrown.
+If a command or state is from the greenhouse node to the server is incorrect, the server will create a log entry and
+discard the message. If the command or state form the server to the greenhouse is incorrect, the greenhouse will create a
+log entry and discard the message. If the command or state from the control panel to the server is incorrect, the server
+will create a log entry and discard the message. If the command or state from the server to the control panel is
+incorrect, the control panel will create a log entry and discard the message.
 
-Error messages should be structured the same as normal messages however the command argument is "Error".
-The address field will still be the same, but the 3rd argument will be the error message in question
 
 ## An example scenario
 
@@ -181,15 +213,22 @@ example scenario could be as follows:-->
     3. Node receives the command and parses the data to actuate the actuator
 8. User presses "turn off all actuators" on second control panel
     1. Control panel creates a command to send to server
-        1. { "Set", "-1", False }
+        1. { "Set", "-1:-1", False }
     2. Server receives command and equates address "-1" to every node. Server now creates command to set every actuator
        to off.
-        1. { "Set", "30000", False }
-        2. { "Set", "30001", False }
-    3. Each node receives command with "Set" command and iterates over its own actuators to ensure they are all set to
-       false
+        1. { "Set", "30000:-1", False }
+        2. { "Set", "30001:-1", False }
+    3. Each node receives command with "Set" command and equates "-1" to "set" all actuators to on this node to False
 9. Sensor nodes broadcast their state and all control panels are updated from server.
 
 ## Reliability and security
 
-TODO - describe the reliability and security mechanisms your solution supports.
+<!-- TODO - describe the reliability and security mechanisms your solution supports. -->
+
+All commands are queued up when they are created meaning no commands should be "forgotten" or skipped. There is a command
+queue for each node and control panel to ensure all commands are processed. All messages are end-to-end encrypted using
+a rudimentary RSA encryption the command and address headers are not encrypted. 
+The server does not process the commands, it only forwards them to the correct node or control panel. This means that
+the server is not vulnerable to any attacks that could be caused by processing the commands. As the server only forwards
+the commands, it is not possible to read the contents of the commands. The server does not store any information about
+the nodes or control panels, except for the socket port.

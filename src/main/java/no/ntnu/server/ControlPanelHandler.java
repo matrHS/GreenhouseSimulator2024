@@ -17,8 +17,6 @@ import no.ntnu.tools.loggers.ServerLogger;
  */
 public class ControlPanelHandler extends Thread {
   private final Socket socket;
-  private final String[] allowedCommands = new String[] {"set", "get", "add", "remove", "data",
-      "state", "update", "camera"};
   private ObjectOutputStream outputStream;
   private ObjectInputStream inputStream;
   private AtomicReference<String[]> cmdStack;

@@ -57,7 +57,6 @@ public class GreenhouseNode extends TimerTask
     while (!socket.isClosed()) {
       listenForCommands();
       sendCommandIfExists();
-
     }
   }
 
@@ -214,6 +213,7 @@ public class GreenhouseNode extends TimerTask
     } catch (RuntimeException e) {
       logger.error(e.toString());
     } catch (SocketTimeoutException e) {
+//      logger.info("Timeout when reading command");
     } catch (IOException e) {
       logger.error("Failed to read");
     } catch (ClassNotFoundException e) {
@@ -234,35 +234,6 @@ public class GreenhouseNode extends TimerTask
       } catch (IOException e) {
         logger.info("Failed to write to the server");
       }
-    }
-  }
-
-  /**
-   * Receives a command from the server.
-   */
-  private String[] receiveCommand() {
-    try {
-      return (String[]) objectInputStream.readObject();
-    } catch (SocketTimeoutException e) {
-      return null;
-    } catch (IOException e) {
-      // logger.error("Timeout when reading command\n" + e.toString());
-      throw new RuntimeException(e);
-    } catch (ClassNotFoundException e) {
-      logger.error(e.toString());
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * Closes the communication between the node and the server.
-   */
-  //TODO is this in use?
-  private void stopCommunication() {
-    try {
-      this.socket.close();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
   }
 
