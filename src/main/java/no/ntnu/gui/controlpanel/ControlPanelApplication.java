@@ -384,7 +384,8 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     SensorPane aggregatePane = new SensorPane("1 minute average");
     aggregatePanes.put(nodeInfo.getId(), aggregatePane);
 
-    VBox greenhuose = new VBox(sensorPane, actuatorPane, actuatorGroupButtons, cameraPane, aggregatePane);
+    VBox greenhuose = new VBox(sensorPane, actuatorPane, actuatorGroupButtons,
+        cameraPane, aggregatePane);
     greenhuose.setMaxWidth(700);
     greenhuose.setMinWidth(700);
     Screen screen = Screen.getPrimary();

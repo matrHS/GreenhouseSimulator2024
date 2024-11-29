@@ -94,6 +94,7 @@ public class GreenhouseHandler extends Thread {
       String[] command = (String[]) inputStream.readObject();
       server.putCommandControlPanel(command);
     } catch (SocketTimeoutException e) {
+      logger.info("Timeout");
     } catch (IOException e) {
       server.closeSocket(server.getNodeMap(), this.socket);
     } catch (ClassNotFoundException e) {

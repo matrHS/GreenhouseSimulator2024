@@ -214,6 +214,7 @@ public class GreenhouseNode extends TimerTask
     } catch (RuntimeException e) {
       logger.error(e.toString());
     } catch (SocketTimeoutException e) {
+      logger.info("Timeout when reading command");
     } catch (IOException e) {
       logger.error("Failed to read");
     } catch (ClassNotFoundException e) {
