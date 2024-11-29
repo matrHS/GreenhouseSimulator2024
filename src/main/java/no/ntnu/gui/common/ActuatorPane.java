@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
@@ -74,6 +75,7 @@ public class ActuatorPane extends TitledPane {
     actuatorGui.setSpacing(5);
     return actuatorGui;
   }
+
 
   /**
    * Create a checkbox for an actuator.
