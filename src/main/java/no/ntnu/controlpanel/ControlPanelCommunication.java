@@ -263,6 +263,33 @@ public class ControlPanelCommunication extends Thread implements CommunicationCh
   }
 
   /**
+   * Open all actuators for a specific node.
+   *
+   * @param nodeId The node address ID
+   */
+  public void openActuatorsForNode(int nodeId) {
+    sendActuatorChange(nodeId, -1, true);
+  }
+
+  /**
+   * Close all actuators for a specific node.
+   *
+   * @param nodeId The node address ID
+   */
+  public void closeActuatorsForNode(int nodeId) {
+    sendActuatorChange(nodeId, -1, false);
+  }
+
+  /**
+   * Toggle all actuators for a specific node.
+   *
+   * @param nodeId The node address ID
+   */
+  public void toggleActuatorsForNode(int nodeId) {
+    sentActuatorToggle(nodeId, -1);
+  }
+
+  /**
    * Send actuator toggle change to the server.
    *
    * @param nodeId     The node ID

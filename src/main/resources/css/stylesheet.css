@@ -40,6 +40,14 @@
     -fx-font-weight: normal;
 }
 
+.actuator-multi-buttons {
+    -fx-padding: 5;
+    -fx-spacing: 40;
+    -fx-font-size: 14;
+    -fx-font-weight: normal;
+
+}
+
 .button {
     -fx-min-height: 50;
     -fx-max-height: 50;

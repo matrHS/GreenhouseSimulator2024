@@ -27,6 +27,7 @@ import no.ntnu.controlpanel.ControlPanelCommunication;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.greenhouse.Camera;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.gui.common.ActuatorPane;
@@ -171,13 +172,30 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     HBox bottomPane = new HBox();
     bottomPane.getStyleClass().add("actuators-buttons");
 
-    Button openActuators = new Button("Open Actuators");
-    Button closeActuators = new Button("Close Actuators");
-    Button toggleActuators = new Button("Toggle Actuators");
+    Button openActuators = new Button("Open all Actuators");
+    Button closeActuators = new Button("Close all Actuators");
+    Button toggleActuators = new Button("Toggle all Actuators");
 
     openActuators.setOnAction(e -> channel.openActuators());
     closeActuators.setOnAction(e -> channel.closeActuators());
     toggleActuators.setOnAction(e -> channel.toggleActuators());
+
+    bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
+
+    return bottomPane;
+  }
+
+  private Node createActuatorGroupButtons(SensorActuatorNodeInfo node) {
+    HBox bottomPane = new HBox();
+    bottomPane.getStyleClass().add("actuators-multi-buttons");
+
+    Button openActuators = new Button("Open Actuators");
+    Button closeActuators = new Button("Close Actuators");
+    Button toggleActuators = new Button("Toggle Actuators");
+
+    openActuators.setOnAction(e -> channel.openActuatorsForNode(node.getId()));
+    closeActuators.setOnAction(e -> channel.closeActuatorsForNode(node.getId()));
+    toggleActuators.setOnAction(e -> channel.toggleActuatorsForNode(node.getId()));
 
     bottomPane.getChildren().addAll(openActuators, closeActuators, toggleActuators);
 
@@ -354,13 +372,19 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     ActuatorPane actuatorPane = new ActuatorPane(nodeInfo.getActuators(), this);
     actuatorPanes.put(nodeInfo.getId(), actuatorPane);
 
+    Node actuatorGroupButtons = new HBox();
+    if (nodeInfo.getActuators().size() > 1) {
+      actuatorGroupButtons = createActuatorGroupButtons(nodeInfo);
+    }
+
+
     CameraPane cameraPane = new CameraPane();
     cameraPanes.put(nodeInfo.getId(), cameraPane);
 
     SensorPane aggregatePane = new SensorPane("1 minute average");
     aggregatePanes.put(nodeInfo.getId(), aggregatePane);
 
-    VBox greenhuose = new VBox(sensorPane, actuatorPane, cameraPane, aggregatePane);
+    VBox greenhuose = new VBox(sensorPane, actuatorPane, actuatorGroupButtons, cameraPane, aggregatePane);
     greenhuose.setMaxWidth(700);
     greenhuose.setMinWidth(700);
     Screen screen = Screen.getPrimary();
