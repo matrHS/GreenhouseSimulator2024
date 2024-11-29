@@ -87,7 +87,7 @@ public class SensorActuatorNode extends TimerTask
     if (n <= 0) {
       throw new IllegalArgumentException("Can't add a negative number of cameras");
     }
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < 1; i++) {
       cameras.add(camera);
     }
   }
@@ -226,6 +226,10 @@ public class SensorActuatorNode extends TimerTask
    * Add random image to all cameras.
    */
   private void addRandomImageToCameras() {
+    // Hacky method to simulate camera images if node contains no cameras
+    if (cameras.isEmpty()) {
+      return;
+    }
     cameras.clear();
     cameras.add(DeviceFactory.createCamera(1));
   }

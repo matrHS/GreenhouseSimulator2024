@@ -79,8 +79,9 @@ public class GreenhouseNode extends TimerTask
       int windows = Integer.parseInt(args[2]);
       int fans = Integer.parseInt(args[3]);
       int heaters = Integer.parseInt(args[4]);
+      int cameras = Integer.parseInt(args[5]);
 
-      createNode(temperature, humidity, windows, fans, heaters, 1);
+      createNode(temperature, humidity, windows, fans, heaters, cameras);
     } else {
       createNode(1, 2, 1, 1, 1, 1);
       System.out.println("Greenhouse initialized with default sensors "
