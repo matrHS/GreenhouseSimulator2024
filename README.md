@@ -68,19 +68,19 @@ This is the JAR file used to run the application in the terminal.
 
 To start the server in the terminal the following command should be used. It is important to start the server before any other nodes.  
 `
-java -cp .\target\datakomm-project-2023.1.0-shaded.jar no.ntnu.server.Server
+java -cp .\target\datakomm-project-2023.1.0.jar no.ntnu.server.Server
 `  
 
 To start the Greenhouse Node the following command can be uesd in another terminal instance  
 `
-java -cp .\target\datakomm-project-2023.1.0-shaded.jar no.ntnu.run.GreenhouseNodeStarter
+java -cp .\target\datakomm-project-2023.1.0.jar no.ntnu.run.GreenhouseNodeStarter
 `  
 Commandline arguments can also be included here to define how many of each sensors and actuator should be present
 on the node by using the following command.  
 `
-java -cp .\target\datakomm-project-2023.1.0-shaded.jar no.ntnu.run.GreenhouseNodeStarter 1 2 3 4 5 1
+java -cp .\target\datakomm-project-2023.1.0.jar no.ntnu.run.GreenhouseNodeStarter 1 2 3 4 5 1
 `  
-The numbers represents the number of each sensor or actuator type following the pattern 
+The numbers represent the number of each sensor or actuator type following the pattern 
 "temperature humidity window fan heater camera"
 
 The control panel uses JavaFX which is why the shaded build is needed if Javafx is not installed separately.
