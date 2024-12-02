@@ -86,7 +86,7 @@ The numbers represent the number of each sensor or actuator type following the p
 The control panel uses JavaFX which is why the shaded build is needed if Javafx is not installed separately.
 The following command will start the control panel and the user can start as many control panels as needed.  
 `
-java -cp .\target\datakomm-project-2023.1.0-shaded.jar no.ntnu.run.ControlPanelStarter
+java -cp .\target\datakomm-project-2023.1.0.jar no.ntnu.run.ControlPanelStarter
 `
 
 
